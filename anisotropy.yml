@@ -1,0 +1,14 @@
+name: anisotropy
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - ipython
+  - jupyter
+  - matplotlib
+  - numpy
+  - obspy
+  - pandas
+  - python ==3.8
+  - pyproj
+  - scipy
