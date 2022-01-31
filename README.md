@@ -2,17 +2,19 @@
 <img src="./docs/img/AnilogoBig.png" width="80%">
 </p>
 
+[![Documentation Status](https://readthedocs.org/projects/seismicanisotropy/badge/?version=latest)](https://seismicanisotropy.readthedocs.io/en/latest/?badge=latest)
+
 AnisotroPy is a Python package that provides standard routines for a number of aspects of the study of seismic anisotropy, including: shear-wave splitting analysis (to be implemented), effective media modelling, multiple layer fitting, and more.
 
 The package has been built to provide an efficient pythonic implementation of a number of long-established methods that can be either incorporated into analysis scripts, or used with a high-level dashboard interface. Where possible, we aim to provide parsers for the outputs of a number of established packages for shear-wave splitting analysis. This will be accomplished in future via a sibling project, AnIO, which will establish a standard, unified file format for shear-wave splitting analyses.
 
 Documentation
 -------------
-Documentation for AnisotroPy is hosted [here](https://anisotropy.readthedocs.io/en/latest/index.html).
+Documentation for AnisotroPy is hosted [here](https://seismicanisotropy.readthedocs.io/en/latest/index.html).
 
 Installation
 ------------
-Installation instructions can be found [here](https://anisotropy.readthedocs.io/en/latest/installation.html).
+Installation instructions can be found [here](https://seismicanisotropy.readthedocs.io/en/latest/installation.html).
 
 Usage
 -----
