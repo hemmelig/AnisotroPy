@@ -207,7 +207,8 @@ def setup_package():
         "zip_safe": False,
         "packages": ["anisotropy",
                      "anisotropy.effective_modelling",
-                     "anisotropy.materials"],
+                     "anisotropy.materials",
+                     "anisotropy.utils"],
         "package_data": get_package_data(),
         "package_dir": get_package_dir()
                   }

@@ -14,7 +14,7 @@ moduli, etc.
 
 import numpy as np
 
-import anisotropy.util as util
+import anisotropy.utils as utils
 
 
 C_iso = np.array([[237.5533,  78.4733,  78.4733,  0.0000,  0.0000,  0.0000],
@@ -83,7 +83,7 @@ class Material:
         self.C = C
         self.rho = rho
 
-    def __repr__(self):
+    def __str__(self):
         """Pretty string representation of the materials stiffness tensor, C."""
 
         C = self.C
@@ -150,7 +150,7 @@ class Material:
 
         vp, vs1, vs2, φφ = [], [], [], []
         for ψ, θ in zip(azimuth, inclination):
-            x = util.azinc2vec(ψ, θ)
+            x = utils.azinc2vec(ψ, θ)
 
             # Make the Christoffel matrix
             M = self._christoffel(x)
@@ -211,7 +211,7 @@ class Material:
 
         gvp, gvs1, gvs2 = [], [], []
         for ψ, θ in zip(azimuth, inclination):
-            x = util.azinc2vec(ψ, θ)
+            x = utils.azinc2vec(ψ, θ)
 
             # Make the Christoffel matrix
             M = self._christoffel(x)
@@ -370,7 +370,7 @@ class Material:
         plane = np.cross(x1, np.cross(x1, x2))
         plane /= np.linalg.norm(plane)
 
-        rotated_vec = util.rotate2xy(plane.copy(), azimuth, inclination)
+        rotated_vec = utils.rotate2xy(plane.copy(), azimuth, inclination)
 
         φ = np.rad2deg(np.arctan2(rotated_vec[1], rotated_vec[2]))
         φ = φ + 180 if φ < -90 else φ

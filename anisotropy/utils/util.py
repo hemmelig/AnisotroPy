@@ -19,7 +19,7 @@ from itertools import tee
 
 import matplotlib.ticker as ticker
 import numpy as np
-#from obspy import Trace
+from obspy import Trace
 
 
 log_spacer = "="*110
