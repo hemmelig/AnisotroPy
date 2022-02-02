@@ -10,3 +10,5 @@ provide basic utility functions that are used throughout the AnisotroPy package.
     (https://www.gnu.org/licenses/gpl-3.0.html)
 
 """
+
+from .util import *

@@ -294,7 +294,7 @@ def _calculate_misfit(observations, layers, angle_of_incidence):
     return M
 
 
-def model(frequency, angle_of_incidence, layers, azimuth=np.arange(0, 361, 1),
+def model(frequency, angle_of_incidence, layers, azimuth=None,
           method="silver_savage"):
     """
     Calculate the effective splitting of a ray passing through N arbitrarily
@@ -326,7 +326,7 @@ def model(frequency, angle_of_incidence, layers, azimuth=np.arange(0, 361, 1),
         return _silver_savage_94(frequency, angle_of_incidence, layers, azimuth)
 
 
-def _silver_savage_94(frequency, angle_of_incidence, layers, azimuth=np.arange(0, 361, 1)):
+def _silver_savage_94(frequency, angle_of_incidence, layers, azimuth=None):
     """
     Calculates the effective splitting for N layers using the method set out in
     Silver and Savage (1994):
@@ -361,6 +361,12 @@ def _silver_savage_94(frequency, angle_of_incidence, layers, azimuth=np.arange(0
     if not isinstance(layers, list):
         print("Must provide a list of `anisotropy.ElasticLayer`.")
         raise ValueError
+
+    # Run tests to see if the angles are scalars or lists
+    if np.isscalar(azimuth):
+        azimuth = [azimuth]
+    elif azimuth is None:
+        azimuth = np.arange(0, 361, 1)
 
     effective_φφ, effective_δδt = [], []
     for az in azimuth:

@@ -12,6 +12,8 @@ moduli, etc.
 
 """
 
+import itertools
+
 import numpy as np
 
 import anisotropy.utils as utils
@@ -45,9 +47,11 @@ class Material:
     is_isotropic : bool
         Tests whether the material is isotropic.
     lame_coefficients : [float, float]
-        Calculates Lame coefficients for the material.
+        Calculates Lamé coefficients for the material.
     bulk_modulus : float
         Calculates the bulk modulus, K, for the material.
+    shear_modulus : float
+        Calculates the shear modulus, G, for the material.
 
     Methods
     -------
@@ -63,11 +67,10 @@ class Material:
 
     TO-DO
     -----
-    - Provide methods to transform between the Voigt-form and full tensor
-      representations of the elasticity tensors
     - Finish documentation
     - Implement method to calculate the isotropic (symmetric) portion of a
       arbitrarily anisotropic stiffness tensor
+    - Remove olivine specific isotropic component
 
     """
 
@@ -104,7 +107,7 @@ class Material:
 
         return str_
 
-    def phase_velocities(self, inclination, azimuth=np.arange(0, 361, 1)):
+    def phase_velocities(self, inclination, azimuth=None):
         """
         Calculate the phase velocities for the 6x6 elasticity matrix C along
         the direction (ψ, θ), in degrees, and return P-wave velocity Vp, the
@@ -141,6 +144,8 @@ class Material:
         # Run tests to see if the angles are scalars or lists
         if np.isscalar(azimuth):
             azimuth = [azimuth]
+        elif azimuth is None:
+            azimuth = np.arange(0, 361, 1)
         if np.isscalar(inclination):
             inclination = np.ones(len(azimuth))*inclination
         if len(azimuth) != len(inclination):
@@ -173,7 +178,7 @@ class Material:
 
         return vp, vs1, vs2, φφ, shear_wave_anisotropy
 
-    def group_velocities(self, inclination, azimuth=np.arange(0, 361, 1)):
+    def group_velocities(self, inclination, azimuth=None):
         """
         Calculate the group velocities for the 6x6 elasticity matrix C along
         the direction (ψ, θ), in degrees, and return P-wave velocity Vp, and
@@ -202,6 +207,8 @@ class Material:
         # Run tests to see if the angles are scalars or lists
         if np.isscalar(azimuth):
             azimuth = [azimuth]
+        elif azimuth is None:
+            azimuth = np.arange(0, 361, 1)
         if np.isscalar(inclination):
             inclination = np.ones(len(azimuth))*inclination
         if len(azimuth) != len(inclination):
@@ -381,12 +388,17 @@ class Material:
     @property
     def is_isotropic(self):
         """Tests whether the material is isotropic. Returns a boolean."""
-        # TO BE IMPLEMENTED
-        return True
+        C = self.C
+        # Build predicates
+        pred1 = bool(C[0, 1] == C[0, 2] == C[1, 2])
+        pred2 = bool(C[3, 3] == C[4, 4] == C[5, 5])
+        pred3 = bool(C[0, 0] == C[1, 1] == C[2, 2] == C[0, 1] + 2*C[3, 3])
+
+        return bool((pred1 and pred2 and pred3))
 
     @property
     def lame_coefficients(self):
-        """Returns the Lame coefficients for the material."""
+        """Returns the Lamé coefficients for the material."""
         # Material must be isotropic for these to be meaningful!
         if not self.is_isotropic:
             raise ValueError
@@ -398,12 +410,56 @@ class Material:
     @property
     def bulk_modulus(self):
         """Returns the bulk modulus for the material."""
-        # Material must be isotropic for this to be meaningful!
-        if not self.is_isotropic:
-            raise ValueError
-        la, mu = self.lame_coefficients
+        # If the material is isotropic, simply use the Lamé coefficients
+        if self.is_isotropic:
+            la, mu = self.lame_coefficients
+            return la + 2*mu/3
 
-        return la + 2*mu/3
+        # Calculate Voigt's bulk modulus
+        C = self.C.copy()
+        K_voigt = (C[0, 0] + C[1, 1] + C[2, 2]
+                   + 2*(C[0, 1] + C[0, 2] + C[1, 2])) / 9
+
+        # Calculate Reuss' bulk modulus
+        S = np.linalg.inv(C)
+        K_reuss = 1 / (S[0, 0] + S[1, 1] + S[2, 2]
+                       + 2*(S[0, 1] + S[0, 2] + S[1, 2]))
+
+        return (K_voigt + K_reuss) / 2
+
+    @property
+    def shear_modulus(self):
+        """Returns the shear modulus for the material."""
+        # If the material is isotropic, simply use the Lamé coefficients
+        if self.is_isotropic:
+            _, mu = self.lame_coefficients
+            return mu
+
+        # Calculate Voigt's shear modulus
+        C = self.C.copy()
+        G_voigt = (C[0, 0] + C[1, 1] + C[2, 2]
+                   - (C[0, 1] + C[1, 2] + C[0, 2])
+                   + 3*(C[3, 3] + C[4, 4] + C[5, 5])) / 15
+
+        # Calculate Reuss' shear modulus
+        S = np.linalg.inv(C)
+        G_reuss = 15 / (4*(S[0, 0] + S[1, 1] + S[2, 2])
+                        - 4*(S[0, 1] + S[0, 2] + S[1, 2])
+                        + 3*(S[3, 3] + S[4, 4] + S[5, 5]))
+
+        return (G_voigt + G_reuss) / 2
+
+    @property
+    def C_tensor(self):
+        """Returns the elastic stiffness tensor in full 4th rank tensor form."""
+        tensor = np.zeros((3, 3, 3, 3), dtype=float)
+        for i, j, k, l in itertools.product(range(3), repeat=4):
+            m = self._VOIGT_CONTRACTION_MATRIX[i, j]
+            n = self._VOIGT_CONTRACTION_MATRIX[k, l]
+            tensor[i, j, k, l] = self.C[m, n]
+
+        return tensor
+
 
 def voigt_average(stiffness_tensors, volume_fractions):
     """
