@@ -172,7 +172,7 @@ class Material:
             vs1.append(phase_velocities[is1])
             vs2.append(phase_velocities[is2])
             φφ.append(
-                self._calculate_polarisation(ψ, θ, x, eigenvectors[:, is1]))
+                self._calculate_polarisation(θ, ψ, x, eigenvectors[:, is1]))
 
         shear_wave_anisotropy = 200*(np.subtract(vs1, vs2)/np.add(vs1, vs2))
 
