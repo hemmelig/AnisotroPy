@@ -16,7 +16,7 @@ All values are reported in units of GPa and g/cm^3.
 import numpy as np
 
 from anisotropy.materials import Material
-from anisotropy.utils.errors import InvalidMaterialID
+import anisotropy.utils.errors as errors
 
 
 def load(material_id):
@@ -39,7 +39,7 @@ def load(material_id):
         C, rho = globals()[f"_{material_id}"]()
         return Material(np.asarray(C), rho)
     except KeyError:
-        raise InvalidMaterialID
+        raise errors.InvalidMaterialID(material_id)
 
 
 def _antigorite():

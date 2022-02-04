@@ -17,6 +17,6 @@ class InvalidMaterialID(Exception):
 
     """
 
-    def __init__(self):
-        msg = ("InvalidMaterialID: material  with this ID not in database.")
+    def __init__(self, mID):
+        msg = (f"Material with ID {mID!r} not in database.")
         super().__init__(msg)
