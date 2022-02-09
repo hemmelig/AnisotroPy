@@ -44,6 +44,65 @@ class TestMaterials(unittest.TestCase):
         # - Load material
         material = materials.load("olivine")
 
+    def test_voigt_reuss_hill_averaging(self):
+        print()
+        print("="*60)
+        print("Testing the suite of Voigt-Reuss-Hill averaging functions...")
+        material1 = materials.isotropic_C(vp=5.0, vs=3.0, rho=4.0)
+        material2 = materials.isotropic_C(la=5.0, mu=4.0, rho=4.0)
+        vrh_C, _, voigt_C, reuss_C = materials.voigt_reuss_hill_average(
+            [material1, material2],
+            [0.2, 0.8])
+        print("\tTest 1 - testing the Voigt averaging function using\n"
+              "\t\t two simple isotropic materials...")
+        expected_C = np.array(
+            [[30.4,  9.6,  9.6,  0.0,  0.0,  0.0],
+             [ 9.6, 30.4,  9.6,  0.0,  0.0,  0.0],
+             [ 9.6,  9.6, 30.4,  0.0,  0.0,  0.0],
+             [ 0.0,  0.0,  0.0, 10.4,  0.0,  0.0],
+             [ 0.0,  0.0,  0.0,  0.0, 10.4,  0.0],
+             [ 0.0,  0.0,  0.0,  0.0,  0.0, 10.4]]
+        )
+        self.assertTrue(np.allclose(voigt_C, expected_C))
+        print("\t\t ...tests pass!")
+
+        print("\tTest 2 - testing the Reuss averaging function using\n"
+              "\t\t two simple isotropic materials...")
+        a, b, c = 15.729147, 5.999418, 4.864865
+        expected_C = np.array(
+            [[a, b, b, 0, 0, 0],
+             [b, a, b, 0, 0, 0],
+             [b, b, a, 0, 0, 0],
+             [0, 0, 0, c, 0, 0],
+             [0, 0, 0, 0, c, 0],
+             [0, 0, 0, 0, 0, c]]
+        )
+        self.assertTrue(np.allclose(reuss_C, expected_C))
+        print("\t\t ...tests pass!")
+
+        print("\tTest 3 - testing the VRH averaging function using\n"
+              "\t\t two simple isotropic materials...")
+        a, b, c = 46.129147/2, 15.599418/2, 15.264865/2
+        expected_C = np.array(
+            [[a, b, b, 0, 0, 0],
+             [b, a, b, 0, 0, 0],
+             [b, b, a, 0, 0, 0],
+             [0, 0, 0, c, 0, 0],
+             [0, 0, 0, 0, c, 0],
+             [0, 0, 0, 0, 0, c]]
+        )
+        self.assertTrue(np.allclose(vrh_C, expected_C))
+        print("\t\t ...tests pass!")
+
+        print("\tTest 4 - testing a suite of cases where one\n\t\t expects an"
+              " exception to be raised...")
+        self.assertRaises(ValueError, materials.voigt_reuss_hill_average,
+                          [material1, material2], [0.3, 0.8])
+        print("\t\t ...tests pass!")
+
+        print("All tests for the Voigt-Reuss-Hill averaging have passed!")
+        print("="*60)
+
     def test_isotropic_elastic_tensor(self):
         print()
         print("="*60)
@@ -120,7 +179,7 @@ class TestMaterials(unittest.TestCase):
         print("\t\t ...tests pass!")
 
         # 5. Test for correctly raised Exceptions
-        print("\tTest 5 - testing a suite of cases where one\n\t\t expects an" 
+        print("\tTest 5 - testing a suite of cases where one\n\t\t expects an"
               " exception to be raised...")
         self.assertRaises(errors.MissingDensityValue,
                           materials.isotropic_C, K=8.0, G=6.0)
@@ -142,12 +201,19 @@ class TestMaterials(unittest.TestCase):
         print("="*60)
 
     def test_birch_law(self):
+        print()
+        print("="*60)
+        print("Testing the function '_vp2rho'...")
         # Test the conversion function of Birch law
+        print("\tTest 1 - test conversion of Vp to density...")
         from anisotropy.materials.core import _vp2rho
         vp = 3.0
         expected_rho = 1.73
 
         self.assertEqual(_vp2rho(vp), expected_rho)
+        print("\t\t ...tests pass!")
+        print("All tests for the function '_vp2rho' have passed!")
+        print("="*60)
 
 if __name__ == "__main__":
     unittest.main()
