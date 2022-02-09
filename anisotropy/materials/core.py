@@ -17,6 +17,7 @@ import itertools
 import numpy as np
 
 import anisotropy.utils as utils
+import anisotropy.utils.errors as errors
 
 
 C_iso = np.array([[237.5533,  78.4733,  78.4733,  0.0000,  0.0000,  0.0000],
@@ -634,14 +635,18 @@ def isotropic_C(vp=None, vs=None, rho=None, la=None, mu=None, K=None, G=None):
 
     C = np.zeros((6, 6))
 
+    if rho is None:
+        if vp is not None:
+            rho = _vp2rho(vp)
+            # Emit a warning here
+        else:
+            raise errors.MissingDensityValue
+
     if vp is not None and vs is not None:
         C[0, 0] = vp**2
         C[3, 3] = vs**2
-        C[0, 1] = C[0, 0] - 2*C[3, 3]
-        if rho is not None:
-            C *= rho
-        else:
-            C *= _vp2rho(vp)
+        C[0, 1] = vp**2 - 2*vs**2
+        C *= rho
     elif la is not None and mu is not None:
         C[0, 0] = la + 2*mu
         C[3, 3] = mu
@@ -649,15 +654,15 @@ def isotropic_C(vp=None, vs=None, rho=None, la=None, mu=None, K=None, G=None):
     elif K is not None and G is not None:
         C[0, 0] = K + 4*G/3
         C[3, 3] = G
-        C[0, 1] = C[0, 0] - 2*C[3, 3]
+        C[0, 1] = K - 2*G/3
     else:
-        print("No arguments provided.")
+        raise errors.InsufficientElasticInformation
 
     C[1, 1] = C[2, 2] = C[0, 0]
     C[4, 4] = C[5, 5] = C[3, 3]
     C[1, 0] = C[0, 2] = C[2, 0] = C[1, 2] = C[2, 1] = C[0, 1]
 
-    return C
+    return Material(C, rho)
 
 
 def _vp2rho(vp):
