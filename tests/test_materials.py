@@ -22,22 +22,36 @@ import anisotropy.utils.errors as errors
 class TestMaterials(unittest.TestCase):
     def test_load_materials(self):
         print("")
+        print("="*60)
+        print("Testing the function 'load'...")
         # Test importing valid/invalid materials
         material = materials.load("olivine")
+        print("\tTest 1 - test material has correct type...")
         self.assertIsInstance(material, materials.Material)
+        print("\t\t ...tests pass!")
 
-        C = np.array(
+        expected_C = np.array(
             [[320.5,  68.1,  71.6,  0.0,  0.0,  0.0],
              [ 68.1, 196.5,  76.8,  0.0,  0.0,  0.0],
              [ 71.6,  76.8, 233.5,  0.0,  0.0,  0.0],
              [  0.0,   0.0,   0.0, 64.0,  0.0,  0.0],
              [  0.0,   0.0,   0.0,  0.0, 77.0,  0.0],
              [  0.0,   0.0,   0.0,  0.0,  0.0, 78.7]])
+        print("\tTest 2 - test elastic moduli are as expected...")
+        self.assertTrue(np.allclose(material.C, expected_C))
+        print("\t\t ...tests pass!")
 
-        self.assertTrue(np.all(material.C == C))
+        print("\tTest 3 - test density is as expected...")
         self.assertEqual(material.rho, 3.355)
+        print("\t\t ...tests pass!")
+
+        print("\tTest 4 - test invalid material ID raises an error...")
         self.assertRaises(errors.InvalidMaterialID,
                           materials.load, "not_a_material")
+        print("\t\t ...tests pass!")
+
+        print("All tests for the function 'load' have passed!")
+        print("="*60)
 
     def test_voigt_contraction(self):
         # Test the Voigt contraction matrix is correct
@@ -158,6 +172,8 @@ class TestMaterials(unittest.TestCase):
              [ 0.0,  0.0,  0.0, 0.0, 0.0, 4.0]]
         )
         self.assertTrue(isotropic_C.is_isotropic)
+        self.assertEqual(isotropic_C.lame_coefficients[0], 5.0)
+        self.assertEqual(isotropic_C.lame_coefficients[1], 4.0)
         self.assertTrue(np.allclose(isotropic_C.C, expected_C))
         print("\t\t ...tests pass!")
 
@@ -175,6 +191,8 @@ class TestMaterials(unittest.TestCase):
              [ 0.0,  0.0,  0.0, 0.0, 0.0, 6.0]]
         )
         self.assertTrue(isotropic_C.is_isotropic)
+        self.assertEqual(isotropic_C.bulk_modulus, 8.0)
+        self.assertEqual(isotropic_C.shear_modulus, 6.0)
         self.assertTrue(np.allclose(isotropic_C.C, expected_C))
         print("\t\t ...tests pass!")
 
@@ -190,7 +208,7 @@ class TestMaterials(unittest.TestCase):
         self.assertRaises(errors.InsufficientElasticInformation,
                           materials.isotropic_C, la=3.0, rho=3.0)
         self.assertRaises(errors.InsufficientElasticInformation,
-                          materials.isotropic_C, K=3.0, la=03.0, rho=3.0)
+                          materials.isotropic_C, K=3.0, la=3.0, rho=3.0)
         self.assertRaises(errors.InsufficientElasticInformation,
                           materials.isotropic_C, K=3.0, vs=2.0, rho=2.0)
         self.assertRaises(errors.InsufficientElasticInformation,
