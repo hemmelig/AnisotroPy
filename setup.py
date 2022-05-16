@@ -64,7 +64,9 @@ def get_package_data():
     package_data = {}
     if not READ_THE_DOCS:
         if get_build_platform() in ("win32", "win-amd64"):
-            package_data["anisotropy.core"] = ["anisotropy/core/src/*.dll"]
+            package_data["anisotropy.splitting.core"] = [
+                "anisotropy/splitting/core/src/*.dll"
+            ]
 
     return package_data
 
@@ -72,8 +74,9 @@ def get_package_data():
 def get_package_dir():
     package_dir = {}
     if get_build_platform() in ("win32", "win-amd64"):
-        package_dir["anisotropy.core"] = str(
-            pathlib.Path("anisotropy") / "core")
+        package_dir["anisotropy.splitting.core"] = str(
+            pathlib.Path("anisotropy") / "splitting" / "core"
+        )
 
     return package_dir
 
@@ -127,19 +130,23 @@ def get_extensions():
 
     common_extension_args = {
         "include_dirs": get_include_dirs(),
-        "library_dirs": get_library_dirs()}
+        "library_dirs": get_library_dirs()
+    }
 
-    sources = [str(pathlib.Path("anisotropy")
-               / "core" / "src" / "anisotropy.c")]
-    exp_symbols = export_symbols("anisotropy/core/src/anisotropylib.def")
+    sources = [
+        str(pathlib.Path("anisotropy") / "splitting/core/src/anisotropy.c")
+    ]
+    exp_symbols = export_symbols(
+        "anisotropy/splitting/core/src/anisotropylib.def"
+    )
 
     if get_build_platform() not in ("win32", "win-amd64"):
         if get_build_platform().startswith("freebsd"):
             # Clang uses libomp not libgomp
-            extra_link_args = ["-lm", "-lomp"]
+            extra_link_args = ["-lm", "-lomp", "-lgsl", "-lgslcblas"]
         else:
-            extra_link_args = ["-lm", "-lgomp"]
-        extra_compile_args = ["-fopenmp", "-fPIC", "-Ofast"]
+            extra_link_args = ["-lm", "-lgomp", "-lgsl", "-lgslcblas"]
+        extra_compile_args = ["-fopenmp", "-fPIC"]#, "-Ofast"]
     else:
         extra_link_args = []
         extra_compile_args = ["/openmp", "/TP", "/O2"]
@@ -148,7 +155,7 @@ def get_extensions():
     common_extension_args["extra_compile_args"] = extra_compile_args
     common_extension_args["export_symbols"] = exp_symbols
 
-    ext_modules = [Extension("anisotropy.core.src.anisotropylib",
+    ext_modules = [Extension("anisotropy.splitting.core.src.anisotropylib",
                              sources=sources, **common_extension_args)]
 
     return ext_modules
@@ -208,10 +215,13 @@ def setup_package():
         "packages": ["anisotropy",
                      "anisotropy.effective_modelling",
                      "anisotropy.materials",
+                     "anisotropy.splitting",
+                     "anisotropy.splitting.core",
                      "anisotropy.utils"],
+        "ext_modules": get_extensions(),
         "package_data": get_package_data(),
         "package_dir": get_package_dir()
-                  }
+    }
 
     shutil.rmtree(str(SETUP_DIRECTORY / "build"), ignore_errors=True)
 

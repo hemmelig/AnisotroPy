@@ -1,0 +1,4 @@
+LIBRARY anisotropylib.pyd
+EXPORTS
+    trial_windows_sc91
+    split_sc91
