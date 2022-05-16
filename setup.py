@@ -1,19 +1,42 @@
 # -*- coding: utf-8 -*-
+"""
+AnisotroPy - a Python toolkit for the study of seismic anisotropy.
+
+:copyright:
+    2021--2022, AnisotroPy developers.
+:license:
+    GNU General Public License, Version 3
+    (https://www.gnu.org/licenses/gpl-3.0.html)
+
+"""
 
 import os
 import pathlib
+import platform
 import re
 import shutil
 import sys
+
 from distutils.ccompiler import get_default_compiler
 from pkg_resources import get_build_platform
-from setuptools import setup, Extension
+from setuptools import Extension, find_packages, setup
 from setuptools.command.build_ext import build_ext
 
 
+__version__ = "0.0.1"
+
+# The minimum python version which can be used to run AnisotroPy
+MIN_PYTHON_VERSION = (3, 6)
+
+# Fail fast if the user is on an unsupported version of Python.
+if sys.version_info < MIN_PYTHON_VERSION:
+    msg = (f"AnisotroPy requires python version >= {MIN_PYTHON_VERSION}"
+           f" you are using python version {sys.version_info}")
+    print(msg, file=sys.stderr)
+    sys.exit(1)
+
 # Check if we are on RTD and don't build extensions if we are.
 READ_THE_DOCS = os.environ.get("READTHEDOCS", None) == "True"
-
 if READ_THE_DOCS:
     try:
         environ = os.environb
@@ -26,38 +49,57 @@ if READ_THE_DOCS:
 
 # Directory of the current file
 SETUP_DIRECTORY = pathlib.Path.cwd()
+DOCSTRING = __doc__.split("\n")
+
+# Check for MSVC (Windows)
+if platform.system() == "Windows" and (
+        "msvc" in sys.argv or
+        "-c" not in sys.argv and
+        get_default_compiler() == "msvc"):
+    IS_MSVC = True
+else:
+    IS_MSVC = False
+
+INSTALL_REQUIRES = [
+    "matplotlib",
+    "numpy",
+    "obspy",
+    "pandas",
+    "pyproj",
+    "scipy"
+]
+
+if READ_THE_DOCS:
+    EXTRAS_REQUIRES = {
+        "docs": [
+            "Sphinx >= 1.8.1",
+            "docutils"
+        ]
+    }
+else:
+    EXTRAS_REQUIRES = {}
+
+KEYWORDS = [
+    "array", "anisotropy", "seismic", "seismology", "earthquake", "splitting",
+    "modelling", "ObsPy", "waveform", "seismic anisotropy", "processing"
+]
+
+# Monkey patch for MS Visual Studio
+if IS_MSVC:
+    # Remove 'init' entry in exported symbols
+    def _get_export_symbols(self, ext):
+        return ext.export_symbols
+    from setuptools.command.build_ext import build_ext
+    build_ext.get_export_symbols = _get_export_symbols
 
 
-long_description = """A Python package for standard analysis routines in
-                      the study of seismic anisotropy."""
-
-
-def read(*parts):
+def export_symbols(path):
     """
-    Build an absolute path from *parts* and and return the contents of the
-    resulting file.
+    Required for Windows systems - functions defined in anisotropylib.def.
     """
-    p = SETUP_DIRECTORY
-    for part in parts:
-        p /= part
-    with p.open("r") as f:
-        return f.read()
-
-
-META_FILE = read("anisotropy", "__init__.py")
-
-
-def find_meta(meta):
-    """
-    Extract __*meta*__ from META_FILE.
-    """
-    meta_match = re.search(
-        r"^__{meta}__ = ['\"]([^'\"]*)['\"]".format(meta=meta),
-        META_FILE, re.M
-    )
-    if meta_match:
-        return meta_match.group(1)
-    raise RuntimeError("Unable to find __{meta}__ string.".format(meta=meta))
+    with (SETUP_DIRECTORY / path).open("r") as f:
+        lines = f.readlines()[2:]
+    return [s.strip() for s in lines if s.strip() != ""]
 
 
 def get_package_data():
@@ -79,11 +121,6 @@ def get_package_dir():
         )
 
     return package_dir
-
-
-def get_extras_require():
-    if READ_THE_DOCS:
-        return {"docs": ['Sphinx >= 1.8.1', 'docutils']}
 
 
 def get_include_dirs():
@@ -112,21 +149,14 @@ def get_library_dirs():
     return library_dirs
 
 
-def export_symbols(*parts):
-    """
-    Required for Windows systems - functions defined in anisotropylib.def.
-    """
-    p = SETUP_DIRECTORY
-    for part in parts:
-        p /= part
-    with p.open("r") as f:
-        lines = f.readlines()[2:]
-    return [s.strip() for s in lines if s.strip() != ""]
-
-
 def get_extensions():
+    """
+    Config function used to compile C code into a Python extension.
+    """
+    extensions = []
+
     if READ_THE_DOCS:
-        return []
+        return extensions
 
     common_extension_args = {
         "include_dirs": get_include_dirs(),
@@ -136,29 +166,29 @@ def get_extensions():
     sources = [
         str(pathlib.Path("anisotropy") / "splitting/core/src/anisotropy.c")
     ]
-    exp_symbols = export_symbols(
-        "anisotropy/splitting/core/src/anisotropylib.def"
-    )
 
-    if get_build_platform() not in ("win32", "win-amd64"):
-        if get_build_platform().startswith("freebsd"):
-            # Clang uses libomp not libgomp
-            extra_link_args = ["-lm", "-lomp", "-lgsl", "-lgslcblas"]
-        else:
-            extra_link_args = ["-lm", "-lgomp", "-lgsl", "-lgslcblas"]
-        extra_compile_args = ["-fopenmp", "-fPIC"]#, "-Ofast"]
-    else:
+    if IS_MSVC:
         extra_link_args = []
         extra_compile_args = ["/openmp", "/TP", "/O2"]
+        common_extension_args["export_symbols"] = export_symbols(
+            "anisotropy/splitting/core/src/anisotropylib.def"
+        )
+    else:
+        extra_link_args = ["-lm", "-lgsl", "-lgslcblas"]
+        if get_build_platform().startswith("freebsd"):
+            # Clang uses libomp not libgomp
+            extra_link_args.append("-lomp")
+        else:
+            extra_link_args.append("-lgomp")
+        extra_compile_args = ["-fopenmp", "-fPIC"]#, "-Ofast"]
 
     common_extension_args["extra_link_args"] = extra_link_args
     common_extension_args["extra_compile_args"] = extra_compile_args
-    common_extension_args["export_symbols"] = exp_symbols
 
-    ext_modules = [Extension("anisotropy.splitting.core.src.anisotropylib",
-                             sources=sources, **common_extension_args)]
+    extensions.append(Extension("anisotropy.splitting.core.src.anisotropylib",
+                      sources=sources, **common_extension_args))
 
-    return ext_modules
+    return extensions
 
 
 class CustomBuildExt(build_ext):
@@ -181,22 +211,18 @@ class CustomBuildExt(build_ext):
 def setup_package():
     """Setup package"""
 
-    if not READ_THE_DOCS:
-        install_requires = ["matplotlib", "numpy", "obspy", "pandas", "pyproj",
-                            "scipy"]
-    else:
-        install_requires = ["matplotlib", "mock", "numpy", "obspy", "pandas",
-                            "pyproj", "scipy"]
+    if READ_THE_DOCS:
+        INSTALL_REQUIRES.append("mock")
 
     setup_args = {
         "name": "anisotropy",
-        "version": find_meta("version"),
-        "description": find_meta("description"),
-        "long_description": long_description,
+        "version": __version__,
+        "description": DOCSTRING[1],
+        "long_description": DOCSTRING[3:],
         "url": "https://github.com/hemmelig/AnisotroPy",
-        "author": find_meta("author"),
-        "author_email": find_meta("email"),
-        "license": find_meta("license"),
+        "author": "The AnisotroPy Development Team",
+        "author_email": "conor.bacon@esc.cam.ac.uk",
+        "license": "GNU General Public License, Version 3 (GPLv3)",
         "classifiers": [
             "Development Status :: 3 - Alpha",
             "Intended Audience :: Science/Research",
@@ -204,14 +230,17 @@ def setup_package():
             "Natural Language :: English",
             "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
             "Operating System :: OS Independent",
+            "Programming Language :: Python",
+            "Programming Language :: Python :: 3",
             "Programming Language :: Python :: 3.6",
             "Programming Language :: Python :: 3.7",
             "Programming Language :: Python :: 3.8",
         ],
-        "keywords": "standard routines in the study of seismic anisotropy",
-        "install_requires": install_requires,
-        "extras_require": get_extras_require(),
+        "keywords": KEYWORDS,
+        "install_requires": INSTALL_REQUIRES,
+        "extras_require": EXTRAS_REQUIRES,
         "zip_safe": False,
+        # "packages": find_packages(),
         "packages": ["anisotropy",
                      "anisotropy.effective_modelling",
                      "anisotropy.materials",
