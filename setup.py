@@ -132,10 +132,10 @@ def get_extensions():
         common_extension_args["export_symbols"] = export_symbols(
             "anisotropy/splitting/core/src/anisotropylib.def"
         )
-        common_extension_args["library_dirs"].extend(
+        common_extension_args["library_dirs"].extend([
             str(pathlib.Path.cwd() / "anisotropy" / "core"),
             str(pathlib.Path(sys.prefix) / "bin")
-        )
+        ])
     else:
         extra_compile_args = []
         extra_link_args.extend(["-lm", "-lgsl", "-lgslcblas"])
