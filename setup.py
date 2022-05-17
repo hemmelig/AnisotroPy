@@ -13,12 +13,12 @@ AnisotroPy - a Python toolkit for the study of seismic anisotropy.
 import os
 import pathlib
 import platform
-import re
+# import re
 import shutil
 import sys
 
 from distutils.ccompiler import get_default_compiler
-from pkg_resources import get_build_platform
+# from pkg_resources import get_build_platform
 from setuptools import Extension, find_packages, setup
 from setuptools.command.build_ext import build_ext
 
@@ -102,51 +102,50 @@ def export_symbols(path):
     return [s.strip() for s in lines if s.strip() != ""]
 
 
-def get_package_data():
-    package_data = {}
-    if not READ_THE_DOCS:
-        if get_build_platform() in ("win32", "win-amd64"):
-            package_data["anisotropy.splitting.core"] = [
-                "anisotropy/splitting/core/src/*.dll"
-            ]
+# def get_package_data():
+#     package_data = {}
+#     if not READ_THE_DOCS:
+#         if IS_MSVC:
+#             package_data["anisotropy.splitting.core"] = [
+#                 "anisotropy/splitting/core/src/*.dll"
+#             ]
 
-    return package_data
-
-
-def get_package_dir():
-    package_dir = {}
-    if get_build_platform() in ("win32", "win-amd64"):
-        package_dir["anisotropy.splitting.core"] = str(
-            pathlib.Path("anisotropy") / "splitting" / "core"
-        )
-
-    return package_dir
+#     return package_data
 
 
-def get_include_dirs():
-    # import numpy
+# def get_package_dir():
+#     package_dir = {}
+#     if IS_MSVC:
+#         package_dir["anisotropy.splitting.core"] = str(
+#             pathlib.Path("anisotropy") / "splitting" / "core"
+#         )
 
-    include_dirs = [str(pathlib.Path.cwd() / "anisotropy" / "core" / "src"),
-                    # numpy.get_include(),
-                    str(pathlib.Path(sys.prefix) / "include")]
-
-    if get_build_platform().startswith("freebsd"):
-        include_dirs.append("/usr/local/include")
-
-    return include_dirs
+#     return package_dir
 
 
-def get_library_dirs():
-    library_dirs = []
-    if get_build_platform() in ("win32", "win-amd64"):
-        library_dirs.append(str(pathlib.Path.cwd() / "anisotropy" / "core"))
-        library_dirs.append(str(pathlib.Path(sys.prefix) / "bin"))
+# def get_include_dirs():
+#     include_dirs = [
+#         str(pathlib.Path.cwd() / "anisotropy" / "core" / "src"),
+#         str(pathlib.Path(sys.prefix) / "include")
+#     ]
 
-    library_dirs.append(str(pathlib.Path(sys.prefix) / "lib"))
-    if get_build_platform().startswith("freebsd"):
-        library_dirs.append("/usr/local/lib")
+#     if get_build_platform().startswith("freebsd"):
+#         include_dirs.append("/usr/local/include")
 
-    return library_dirs
+#     return include_dirs
+
+
+# def get_library_dirs():
+#     library_dirs = []
+#     if IS_MSVC:
+#         library_dirs.append(str(pathlib.Path.cwd() / "anisotropy" / "core"))
+#         library_dirs.append(str(pathlib.Path(sys.prefix) / "bin"))
+
+#     library_dirs.append(str(pathlib.Path(sys.prefix) / "lib"))
+    # if get_build_platform().startswith("freebsd"):
+    #     library_dirs.append("/usr/local/lib")
+
+    # return library_dirs
 
 
 def get_extensions():
@@ -159,8 +158,11 @@ def get_extensions():
         return extensions
 
     common_extension_args = {
-        "include_dirs": get_include_dirs(),
-        "library_dirs": get_library_dirs()
+        "include_dirs": [
+            str(pathlib.Path.cwd() / "anisotropy" / "core" / "src"),
+            str(pathlib.Path(sys.prefix) / "include")
+        ],
+        "library_dirs": [str(pathlib.Path(sys.prefix) / "lib")]
     }
 
     sources = [
@@ -173,13 +175,12 @@ def get_extensions():
         common_extension_args["export_symbols"] = export_symbols(
             "anisotropy/splitting/core/src/anisotropylib.def"
         )
+        common_extension_args["library_dirs"].extend(
+            str(pathlib.Path.cwd() / "anisotropy" / "core"),
+            str(pathlib.Path(sys.prefix) / "bin")
+        )
     else:
-        extra_link_args = ["-lm", "-lgsl", "-lgslcblas"]
-        if get_build_platform().startswith("freebsd"):
-            # Clang uses libomp not libgomp
-            extra_link_args.append("-lomp")
-        else:
-            extra_link_args.append("-lgomp")
+        extra_link_args = ["-lm", "-lgsl", "-lgslcblas", "-lgomp"]
         extra_compile_args = ["-fopenmp", "-fPIC"]#, "-Ofast"]
 
     common_extension_args["extra_link_args"] = extra_link_args
@@ -200,7 +201,7 @@ class CustomBuildExt(build_ext):
         else:
             compiler = self.compiler
 
-        if compiler == "msvc":
+        if IS_MSVC:
             # Sort linking issues with init exported symbols
             def _get_export_symbols(self, ext):
                 return ext.export_symbols
@@ -213,6 +214,15 @@ def setup_package():
 
     if READ_THE_DOCS:
         INSTALL_REQUIRES.append("mock")
+
+    package_dir, package_data = {}, {}
+    if IS_MSVC:
+        package_dir["anisotropy.splitting.core"] = str(
+            pathlib.Path("anisotropy") / "splitting" / "core"
+        )
+        package_data["anisotropy.splitting.core"] = [
+            "anisotropy/splitting/core/src/*.dll"
+        ]
 
     setup_args = {
         "name": "anisotropy",
@@ -248,8 +258,8 @@ def setup_package():
                      "anisotropy.splitting.core",
                      "anisotropy.utils"],
         "ext_modules": get_extensions(),
-        "package_data": get_package_data(),
-        "package_dir": get_package_dir()
+        "package_data": package_data,
+        "package_dir": package_dir
     }
 
     shutil.rmtree(str(SETUP_DIRECTORY / "build"), ignore_errors=True)
