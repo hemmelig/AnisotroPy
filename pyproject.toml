@@ -1,5 +1,5 @@
 [tool.cibuildwheel]
 before-all = [
-    "yum -y install gsl"
+    "yum -y install gsl",
     "yum -y install gsl-devel"
 ]
