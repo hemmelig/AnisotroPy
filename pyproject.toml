@@ -11,5 +11,5 @@ before-all = [
 ]
 [tool.cibuildwheel.windows]
 before-all = [
-    "vcpkg install gsl gsl:x64-windows"
+    "vcpkg install gsl:x64-windows"
 ]
