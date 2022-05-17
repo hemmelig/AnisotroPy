@@ -175,8 +175,6 @@ class CustomBuildExt(build_ext):
 def setup_package():
     """Setup package"""
 
-    print(platform.system())
-
     if READ_THE_DOCS:
         INSTALL_REQUIRES.append("mock")
 
