@@ -132,13 +132,9 @@ def get_extensions():
         common_extension_args["export_symbols"] = export_symbols(
             "anisotropy/splitting/core/src/anisotropylib.def"
         )
-        common_extension_args["include_dirs"].extend([
-            "C:/vcpkg/packages/gsl_x64-windows/include"
-        ])
         common_extension_args["library_dirs"].extend([
             str(pathlib.Path.cwd() / "anisotropy" / "core"),
-            str(pathlib.Path(sys.prefix) / "bin"),
-            "C:/vcpkg/packages/gsl_x64-windows/lib"
+            str(pathlib.Path(sys.prefix) / "bin")
         ])
     else:
         extra_compile_args = []
