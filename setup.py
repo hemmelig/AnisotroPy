@@ -169,8 +169,8 @@ def get_extensions():
         str(pathlib.Path("anisotropy") / "splitting/core/src/anisotropy.c")
     ]
 
+    extra_link_args = []
     if IS_MSVC:
-        extra_link_args = []
         extra_compile_args = ["/openmp", "/TP", "/O2"]
         common_extension_args["export_symbols"] = export_symbols(
             "anisotropy/splitting/core/src/anisotropylib.def"
@@ -180,7 +180,11 @@ def get_extensions():
             str(pathlib.Path(sys.prefix) / "bin")
         )
     else:
-        extra_link_args = ["-lm", "-lgsl", "-lgslcblas", "-lgomp"]
+        extra_link_args.extend(["-lm", "-lgsl", "-lgslcblas"])
+        if platform.system() == "Darwin":
+            extra_link_args.extend(["-lomp"])
+        else:
+            extra_link_args.extend(["-lgomp"])
         extra_compile_args = ["-fopenmp", "-fPIC"]#, "-Ofast"]
 
     common_extension_args["extra_link_args"] = extra_link_args
