@@ -6,7 +6,7 @@ before-all = [
 [tool.cibuildwheel.macos]
 before-all = [
     "brew install gsl",
-    "brew install libopenmp",
-    "brew install llvm libomp"
+    "brew install llvm",
+    "brew install libomp"
 ]
 
