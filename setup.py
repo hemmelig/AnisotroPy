@@ -218,7 +218,7 @@ def setup_package():
         "name": "anisotropy",
         "version": __version__,
         "description": DOCSTRING[1],
-        "long_description": DOCSTRING[3:],
+        "long_description": "\n".join(DOCSTRING[3:]),
         "url": "https://github.com/hemmelig/AnisotroPy",
         "author": "The AnisotroPy Development Team",
         "author_email": "conor.bacon@esc.cam.ac.uk",
