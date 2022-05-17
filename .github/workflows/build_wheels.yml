@@ -19,6 +19,7 @@ jobs:
     name: Build wheels on (${{ matrix.os }}, ${{ matrix.build }})
     runs-on: ${{ matrix.os }}
     env:
+      CIBW_BUILD: '${{ matrix.build }}-*'
       CIBW_SKIP: '*i686 *s390x *ppc64le *musllinux*'
     strategy:
       fail-fast: false
