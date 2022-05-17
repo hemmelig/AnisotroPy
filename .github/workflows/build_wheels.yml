@@ -39,6 +39,7 @@ jobs:
         with:
           miniforge-variant: Mambaforge
           miniforge-version: latest
+          python-version: 3.7
 
       - name: Dependencies [Conda]
         if: contains(matrix.os, 'windows-latest')
