@@ -102,52 +102,6 @@ def export_symbols(path):
     return [s.strip() for s in lines if s.strip() != ""]
 
 
-# def get_package_data():
-#     package_data = {}
-#     if not READ_THE_DOCS:
-#         if IS_MSVC:
-#             package_data["anisotropy.splitting.core"] = [
-#                 "anisotropy/splitting/core/src/*.dll"
-#             ]
-
-#     return package_data
-
-
-# def get_package_dir():
-#     package_dir = {}
-#     if IS_MSVC:
-#         package_dir["anisotropy.splitting.core"] = str(
-#             pathlib.Path("anisotropy") / "splitting" / "core"
-#         )
-
-#     return package_dir
-
-
-# def get_include_dirs():
-#     include_dirs = [
-#         str(pathlib.Path.cwd() / "anisotropy" / "core" / "src"),
-#         str(pathlib.Path(sys.prefix) / "include")
-#     ]
-
-#     if get_build_platform().startswith("freebsd"):
-#         include_dirs.append("/usr/local/include")
-
-#     return include_dirs
-
-
-# def get_library_dirs():
-#     library_dirs = []
-#     if IS_MSVC:
-#         library_dirs.append(str(pathlib.Path.cwd() / "anisotropy" / "core"))
-#         library_dirs.append(str(pathlib.Path(sys.prefix) / "bin"))
-
-#     library_dirs.append(str(pathlib.Path(sys.prefix) / "lib"))
-    # if get_build_platform().startswith("freebsd"):
-    #     library_dirs.append("/usr/local/lib")
-
-    # return library_dirs
-
-
 def get_extensions():
     """
     Config function used to compile C code into a Python extension.
@@ -164,6 +118,9 @@ def get_extensions():
         ],
         "library_dirs": [str(pathlib.Path(sys.prefix) / "lib")]
     }
+    if platform.system() == "Darwin":
+        common_extension_args["include_dirs"].extend(["/usr/local/lib"])
+        common_extension_args["library_dirs"].extend(["/usr/local/lib"])
 
     sources = [
         str(pathlib.Path("anisotropy") / "splitting/core/src/anisotropy.c")
@@ -215,6 +172,8 @@ class CustomBuildExt(build_ext):
 
 def setup_package():
     """Setup package"""
+
+    print(platform.system())
 
     if READ_THE_DOCS:
         INSTALL_REQUIRES.append("mock")
