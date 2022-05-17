@@ -1,2 +1,2 @@
 [tool.cibuildwheel]
-before-all = "apt-get install -y libgsl-dev"
+before-all = "yum -y install gsl"
