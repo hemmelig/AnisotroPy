@@ -6,5 +6,7 @@ before-all = [
 [tool.cibuildwheel.macos]
 before-all = [
     "brew install gsl",
-    "brew install gcc"
+    "brew install gcc@9",
+    "CC=gcc-9"
 ]
+
