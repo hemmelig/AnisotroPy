@@ -35,12 +35,13 @@ jobs:
         with:
           fetch-depth: 0
       
-      - name: Dependencies [Conda]
-        if: contains(matrix.os, 'windows-latest')
-        uses: conda-incubator/setup-miniconda@v2
+      - uses: conda-incubator/setup-miniconda@v2
         with:
           miniforge-variant: Mambaforge
           miniforge-version: latest
+
+      - name: Dependencies [Conda]
+        if: contains(matrix.os, 'windows-latest')
         shell: bash -l {0}
         run: |
           # Compilation related dependencies
