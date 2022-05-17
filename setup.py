@@ -124,10 +124,10 @@ def get_package_dir():
 
 
 def get_include_dirs():
-    import numpy
+    # import numpy
 
     include_dirs = [str(pathlib.Path.cwd() / "anisotropy" / "core" / "src"),
-                    numpy.get_include(),
+                    # numpy.get_include(),
                     str(pathlib.Path(sys.prefix) / "include")]
 
     if get_build_platform().startswith("freebsd"):
