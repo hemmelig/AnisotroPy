@@ -81,30 +81,37 @@ class Material:
     
     isotropic = C_iso
 
-    def __init__(self, C, rho):
+    def __init__(self, C, rho, material_id="", reference=""):
         """Instantiate the Material object."""
 
         self.C = C
         self.rho = rho
+        self.id = material_id
+        self.reference = reference
 
     def __str__(self):
         """Pretty string representation of the materials stiffness tensor, C."""
 
         C = self.C
-        str_ = ("C_ijkl =\n\n"
-                f"  {C[0,0]: 8.3f} {C[0, 1]: 8.3f} {C[0, 2]: 8.3f} "
-                f"{C[0, 3]: 8.3f} {C[0, 4]: 8.3f} {C[0, 5]: 8.3f}\n"
-                f"  {C[1,0]: 8.3f} {C[1, 1]: 8.3f} {C[1, 2]: 8.3f} "
-                f"{C[1, 3]: 8.3f} {C[1, 4]: 8.3f} {C[1, 5]: 8.3f}\n"
-                f"  {C[2,0]: 8.3f} {C[2, 1]: 8.3f} {C[2, 2]: 8.3f} "
-                f"{C[2, 3]: 8.3f} {C[2, 4]: 8.3f} {C[2, 5]: 8.3f}\n"
-                f"  {C[3,0]: 8.3f} {C[3, 1]: 8.3f} {C[3, 2]: 8.3f} "
-                f"{C[3, 3]: 8.3f} {C[3, 4]: 8.3f} {C[3, 5]: 8.3f}\n"
-                f"  {C[4,0]: 8.3f} {C[4, 1]: 8.3f} {C[4, 2]: 8.3f} "
-                f"{C[4, 3]: 8.3f} {C[4, 4]: 8.3f} {C[4, 5]: 8.3f}\n"
-                f"  {C[5,0]: 8.3f} {C[5, 1]: 8.3f} {C[5, 2]: 8.3f} "
-                f"{C[5, 3]: 8.3f} {C[5, 4]: 8.3f} {C[5, 5]: 8.3f}\n"
-                f"\nDensity = {self.rho}")
+        str_ = (
+            f"Material ID - {self.id}\n\n"
+            "C_ijkl =\n\n"
+            f"  {C[0,0]: 8.3f} {C[0, 1]: 8.3f} {C[0, 2]: 8.3f} "
+            f"{C[0, 3]: 8.3f} {C[0, 4]: 8.3f} {C[0, 5]: 8.3f}\n"
+            f"  {C[1,0]: 8.3f} {C[1, 1]: 8.3f} {C[1, 2]: 8.3f} "
+            f"{C[1, 3]: 8.3f} {C[1, 4]: 8.3f} {C[1, 5]: 8.3f}\n"
+            f"  {C[2,0]: 8.3f} {C[2, 1]: 8.3f} {C[2, 2]: 8.3f} "
+            f"{C[2, 3]: 8.3f} {C[2, 4]: 8.3f} {C[2, 5]: 8.3f}\n"
+            f"  {C[3,0]: 8.3f} {C[3, 1]: 8.3f} {C[3, 2]: 8.3f} "
+            f"{C[3, 3]: 8.3f} {C[3, 4]: 8.3f} {C[3, 5]: 8.3f}\n"
+            f"  {C[4,0]: 8.3f} {C[4, 1]: 8.3f} {C[4, 2]: 8.3f} "
+            f"{C[4, 3]: 8.3f} {C[4, 4]: 8.3f} {C[4, 5]: 8.3f}\n"
+            f"  {C[5,0]: 8.3f} {C[5, 1]: 8.3f} {C[5, 2]: 8.3f} "
+            f"{C[5, 3]: 8.3f} {C[5, 4]: 8.3f} {C[5, 5]: 8.3f}\n"
+            f"\nDensity (g/cm^3) = {self.rho}\n\n"
+            "Reference\n"
+            f"{self.reference}"
+        )
 
         return str_
 
@@ -662,7 +669,7 @@ def isotropic_C(vp=None, vs=None, rho=None, la=None, mu=None, K=None, G=None):
     C[4, 4] = C[5, 5] = C[3, 3]
     C[1, 0] = C[0, 2] = C[2, 0] = C[1, 2] = C[2, 1] = C[0, 1]
 
-    return Material(C, rho)
+    return Material(C, rho, material_id="isotropic material")
 
 
 def _vp2rho(vp):

@@ -36,8 +36,8 @@ def load(material_id):
     """
 
     try:
-        C, rho = globals()[f"_{material_id}"]()
-        return Material(np.asarray(C), rho)
+        C, rho, reference = globals()[f"_{material_id}"]()
+        return Material(np.asarray(C), rho, material_id, reference)
     except KeyError:
         raise errors.InvalidMaterialID(material_id)
 
@@ -62,7 +62,14 @@ def _antigorite():
 
     rho = 2.620
 
-    return C, rho
+    reference = (
+        "Bezacier, L., Reynard, B., Bass, J.D., Sanchez-Valle, C. and Van de\n"
+        "Moortèle, B., 2010. Elasticity of antigorite, seismic detection of\ns"
+        "erpentinites, and anisotropy in subduction zones. Earth and Planetary"
+        "\nScience Letters, 289(1-2), pp.198-208."
+    )
+
+    return C, rho, reference
 
 
 def _biotite():
@@ -82,7 +89,9 @@ def _biotite():
 
     rho = 2.800
 
-    return C, rho
+    reference = "Aleksandrov and Ryzhova (1986)."
+
+    return C, rho, reference
 
 
 def _blueschist_felsic():
@@ -107,7 +116,16 @@ def _blueschist_felsic():
 
     rho = 2.970
 
-    return C, rho
+    reference = (
+        "Cao, Y., Jung, H. and Song, S., 2013. Petro‐fabrics and seismic prope"
+        "rties\nof blueschist and eclogite in the North Qilian suture zone, NW"
+        " China:\nImplications for the low-velocity upper layer in subducting "
+        "slab,\ntrench-parallel seismic anisotropy, and eclogite detectability"
+        " in the\nsubduction zone. Journal of Geophysical Research: Solid Eart"
+        "h, 118(6),\npp.3037-3058."
+    )
+
+    return C, rho, reference
 
 
 def _blueschist_mafic():
@@ -132,7 +150,16 @@ def _blueschist_mafic():
 
     rho = 3.190
 
-    return C, rho
+    reference = (
+        "Cao, Y., Jung, H. and Song, S., 2013. Petro‐fabrics and seismic prope"
+        "rties\nof blueschist and eclogite in the North Qilian suture zone, NW"
+        " China:\nImplications for the low-velocity upper layer in subducting "
+        "slab,\ntrench-parallel seismic anisotropy, and eclogite detectability"
+        " in the\nsubduction zone. Journal of Geophysical Research: Solid Eart"
+        "h, 118(6),\npp.3037-3058."
+    )
+
+    return C, rho, reference
 
 
 def _clinopyroxene_92():
@@ -154,7 +181,13 @@ def _clinopyroxene_92():
 
     rho = 3.327
 
-    return C, rho
+    reference = (
+        "Bhagat, S.S., Bass, J.D. and Smyth, J.R., 1992. Single‐crystal elasti"
+        "c\nproperties of omphacite‐C2/c by Brillouin spectroscopy. Journal of"
+        "\nGeophysical Research: Solid Earth, 97(B5), pp.6843-6848."
+    )
+
+    return C, rho, reference
 
 
 def _clinopyroxene_98():
@@ -175,7 +208,12 @@ def _clinopyroxene_98():
 
     rho = 3.190
 
-    return C, rho
+    reference = (
+        "Collins, M.D. and Brown, J.M., 1998. Elasticity of an upper mantle\nc"
+        "linopyroxene. Physics and chemistry of minerals, 26(1), pp.7-13."
+    )
+
+    return C, rho, reference
 
 
 def _dolomite():
@@ -198,7 +236,14 @@ def _dolomite():
 
     rho = 2.840
 
-    return C, rho
+    reference = (
+        "Humbert, P. and Plicque, F., 1972. Elastic properties of monocrystall"
+        "ine\nrhombohedral carbonates-Calcite, Magnesite, Dolomite. Comptes re"
+        "ndus\nHebdomadaires des Seances de L Academie des Sciences Serie B, 2"
+        "75(11),\np.391."
+    )
+
+    return C, rho, reference
 
 
 def _eclogite_foliated():
@@ -223,7 +268,16 @@ def _eclogite_foliated():
 
     rho = 3.300
 
-    return C, rho
+    reference = (
+        "Cao, Y., Jung, H. and Song, S., 2013. Petro‐fabrics and seismic prope"
+        "rties\nof blueschist and eclogite in the North Qilian suture zone, NW"
+        " China:\nImplications for the low-velocity upper layer in subducting "
+        "slab,\ntrench-parallel seismic anisotropy, and eclogite detectability"
+        " in the\nsubduction zone. Journal of Geophysical Research: Solid Eart"
+        "h, 118(6),\npp.3037-3058."
+    )
+
+    return C, rho, reference
 
 
 def _eclogite_massive():
@@ -248,7 +302,16 @@ def _eclogite_massive():
 
     rho = 3.490
 
-    return C, rho
+    reference = (
+        "Cao, Y., Jung, H. and Song, S., 2013. Petro‐fabrics and seismic prope"
+        "rties\nof blueschist and eclogite in the North Qilian suture zone, NW"
+        " China:\nImplications for the low-velocity upper layer in subducting "
+        "slab,\ntrench-parallel seismic anisotropy, and eclogite detectability"
+        " in the\nsubduction zone. Journal of Geophysical Research: Solid Eart"
+        "h, 118(6),\npp.3037-3058."
+    )
+
+    return C, rho, reference
 
 
 def _epidote():
@@ -268,7 +331,9 @@ def _epidote():
 
     rho = 3.465
 
-    return C, rho
+    reference = "Aleksandrov et al. (1974)."
+
+    return C, rho, reference
 
 
 def _garnet():
@@ -290,7 +355,13 @@ def _garnet():
 
     rho = 3.660
 
-    return C, rho
+    reference = (
+        "Babuška, V., Fiala, J., Kumazawa, M., Ohno, I. and Sumino, Y., 1978. "
+        "\nElastic properties of garnet solid-solution series. Physics of the "
+        "Earth\nand Planetary Interiors, 16(2), pp.157-176."
+    )
+
+    return C, rho, reference
 
 
 def _glaucophane():
@@ -312,7 +383,13 @@ def _glaucophane():
 
     rho = 3.070
 
-    return C, rho
+    reference = (
+        "Bezacier, L., Reynard, B., Bass, J.D., Wang, J. and Mainprice, D., 20"
+        "10.\nElasticity of glaucophane, seismic velocities and anisotropy of "
+        "the\nsubducted oceanic crust. Tectonophysics, 494(3-4), pp.201-210."
+    )
+
+    return C, rho, reference
 
 
 def _harzburgite():
@@ -340,7 +417,15 @@ def _harzburgite():
 
     rho = 3.200
 
-    return C, rho
+    reference = (
+        "Covey‐Crump, S.J., Schofield, P.F., Stretton, I.C., Knight, K.S. and "
+        "\nIsmaïl, W.B., 2003. Using neutron diffraction to investigate the el"
+        "astic\nproperties of anisotropic rocks: results from an olivine+ orth"
+        "opyroxene\nmylonite. Journal of Geophysical Research: Solid Earth, 10"
+        "8(B2)."
+    )
+
+    return C, rho, reference
 
 
 def _hornblende():
@@ -360,7 +445,9 @@ def _hornblende():
 
     rho = 3.200
 
-    return C, rho
+    reference = "Aleksandrov and Ryzhova (1986)."
+
+    return C, rho, reference
 
 
 def _jadeite():
@@ -382,7 +469,13 @@ def _jadeite():
 
     rho = 3.330
 
-    return C, rho
+    reference = (
+        "Kandelin, J. and Weidner, D.J., 1988. The single-crystal elastic\npro"
+        "perties of jadeite. Physics of the Earth and Planetary Interiors,\n50"
+        "(3), pp.251-260."
+    )
+
+    return C, rho, reference
 
 
 def _lawsonite():
@@ -403,7 +496,13 @@ def _lawsonite():
 
     rho = 3.090
 
-    return C, rho
+    reference = (
+        "Sinogeikin, S.V., Schilling, F.R. and Bass, J.D., 2000. Single crysta"
+        "l\nelasticity of lawsonite. American Mineralogist, 85(11-12), pp.1834"
+        "-1837."
+    )
+
+    return C, rho, reference
 
 
 def _lherzolite():
@@ -425,7 +524,14 @@ def _lherzolite():
 
     rho = 3.270
 
-    return C, rho
+    reference = (
+        "Peselnick, L., Nicolas, A. and Stevenson, P.R., 1974. Velocity anisot"
+        "ropy\nin a mantle peridotite from the Ivrea Zone: Application to uppe"
+        "r mantle\nanisotropy. Journal of Geophysical Research, 79(8), pp.1175"
+        "-1182."
+    )
+
+    return C, rho, reference
 
 
 def _lizardite_atom():
@@ -448,7 +554,14 @@ def _lizardite_atom():
 
     rho = 2.5155
 
-    return C, rho
+    reference = (
+        "Auzende, A.L., Pellenq, R.M., Devouard, B., Baronnet, A. and Grauby, "
+        "O.,\n2006. Atomistic calculations of structural and elastic propertie"
+        "s of\nserpentine minerals: the case of lizardite. Physics and chemist"
+        "ry of\nminerals, 33(4), pp.266-275."
+    )
+
+    return C, rho, reference
 
 
 def _lizardite():
@@ -470,7 +583,13 @@ def _lizardite():
 
     rho = 2.610
 
-    return C, rho
+    reference = (
+        "Reynard, B., Hilairet, N., Balan, E. and Lazzeri, M., 2007. Elasticit"
+        "y of \nserpentines and extensive serpentinization in subduction zones"
+        ".\nGeophysical Research Letters, 34(13)."
+    )
+
+    return C, rho, reference
 
 
 def _muscovite():
@@ -492,7 +611,13 @@ def _muscovite():
 
     rho = 2.834
 
-    return C, rho
+    reference = (
+        "Vaughan, M.T. and Guggenheim, S., 1986. Elasticity of muscovite and i"
+        "ts\nrelationship to crystal structure. Journal of Geophysical Researc"
+        "h: Solid\nEarth, 91(B5), pp.4657-4664."
+    )
+
+    return C, rho, reference
 
 
 def _olivine():
@@ -514,7 +639,13 @@ def _olivine():
 
     rho = 3.355
 
-    return C, rho
+    reference = (
+        "Abramson, E.H., Brown, J.M., Slutsky, L.J. and Zaug, J., 1997. The el"
+        "astic\nconstants of San Carlos olivine to 17 GPa. Journal of Geophysi"
+        "cal\nResearch: Solid Earth, 102(B6), pp.12253-12263."
+    )
+
+    return C, rho, reference
 
 
 def _orthopyroxene():
@@ -536,7 +667,13 @@ def _orthopyroxene():
 
     rho = 3.304
 
-    return C, rho
+    reference = (
+        "Chai, M., Brown, J.M. and Slutsky, L.J., 1997. The elastic constants "
+        "of an\naluminous orthopyroxene to 12.5 GPa. Journal of Geophysical Re"
+        "search:\nSolid Earth, 102(B7), pp.14779-14785."
+    )
+
+    return C, rho, reference
 
 
 def _plagioclase_64():
@@ -556,7 +693,9 @@ def _plagioclase_64():
 
     rho = 2.700
 
-    return C, rho
+    reference = "Ryzhova (1964)."
+
+    return C, rho, reference
 
 
 def _plagioclase_06():
@@ -576,7 +715,9 @@ def _plagioclase_06():
 
     rho = 2.700
 
-    return C, rho
+    reference = "Brown et al. (2006)."
+
+    return C, rho, reference
 
 
 def _quartz():
@@ -596,7 +737,9 @@ def _quartz():
 
     rho = 2.649
 
-    return C, rho
+    reference = "Lakshanov et al. (2007)."
+
+    return C, rho, reference
 
 
 def _serpentinite_37():
@@ -624,7 +767,13 @@ def _serpentinite_37():
 
     rho = 3.000
 
-    return C, rho
+    reference = (
+        "Watanabe, T., Shirasugi, Y., Yano, H. and Michibayashi, K., 2011. Sei"
+        "smic\nvelocity in antigorite-bearing serpentinite mylonites. Geologic"
+        "al Society,\nLondon, Special Publications, 360(1), pp.97-112."
+    )
+
+    return C, rho, reference
 
 
 def _serpentinite_80():
@@ -652,7 +801,13 @@ def _serpentinite_80():
 
     rho = 2.800
 
-    return C, rho
+    reference = (
+        "Watanabe, T., Shirasugi, Y., Yano, H. and Michibayashi, K., 2011. Sei"
+        "smic\nvelocity in antigorite-bearing serpentinite mylonites. Geologic"
+        "al Society,\nLondon, Special Publications, 360(1), pp.97-112."
+    )
+
+    return C, rho, reference
 
 
 def _zoisite():
@@ -674,4 +829,10 @@ def _zoisite():
 
     rho = 3.343
 
-    return C, rho
+    reference = (
+        "Mao, Z., Jiang, F. and Duffy, T.S., 2007. Single-crystal elasticity o"
+        "f\nzoisite Ca2Al3Si3O12 (OH) by Brillouin scattering. American Minera"
+        "logist,\n92(4), pp.570-576."
+    )
+
+    return C, rho, reference
