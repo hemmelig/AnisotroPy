@@ -115,6 +115,20 @@ class Material:
 
         return str_
 
+    def __eq__(self, other):
+        """Magic method for rich comparison '=='"""
+
+        if not isinstance(other, Material):
+            raise TypeError(
+                "Comparison only valid between anisotropy.materials.Material "
+                "objects."
+            )
+
+        pred1 = np.allclose(self.C, other.C)
+        pred2 = self.rho == other.rho
+
+        return bool(pred1 and pred2)
+
     def phase_velocities(self, inclination, azimuth=None):
         """
         Calculate the phase velocities for the 6x6 elasticity matrix C along
@@ -408,6 +422,31 @@ class Material:
         return bool((pred1 and pred2 and pred3))
 
     @property
+    def isotropic(self):
+        """Returns the isotropic component of elastic material."""
+        return Material(decompose_C(self)["isotropic"], self.rho)
+
+    @property
+    def hexagonal(self):
+        """Returns the hexagonal component of elastic material."""
+        return Material(decompose_C(self)["hexagonal"], self.rho)
+
+    @property
+    def tetragonal(self):
+        """Returns the isotropic component of elastic material."""
+        return Material(decompose_C(self)["tetragonal"], self.rho)
+
+    @property
+    def orthorhombic(self):
+        """Returns the isotropic component of elastic material."""
+        return Material(decompose_C(self)["orthorhombic"], self.rho)
+
+    @property
+    def monoclinic(self):
+        """Returns the isotropic component of elastic material."""
+        return Material(decompose_C(self)["monoclinic"], self.rho)
+
+    @property
     def lame_coefficients(self):
         """Returns the Lamé coefficients for the material."""
         # Material must be isotropic for these to be meaningful!
@@ -671,6 +710,166 @@ def isotropic_C(vp=None, vs=None, rho=None, la=None, mu=None, K=None, G=None):
 
     return Material(C, rho, material_id="isotropic material")
 
+
+def decompose_C(material, symmetry="all"):
+    """
+    Decomposes an elastic tensor after the formulation set out in Browaeys and
+    Chevrot, 2004. They propose a decomposition of the elastic tensor by
+    representing it as triclinic elastic vector, X, before transforming it via
+    a cascade of projections into a sum of vectors belonging to the different
+    symmetry classes.
+
+    Parameters
+    ----------
+    material : `anisotropy.materials.Material` object
+        Material to decompose into elastic tensors representing each symmetry
+        class.
+    symmetry : str, optional
+        Specify which component to return - default is to return a dictionary
+        containing all decompositions.
+
+    Returns
+    -------
+    decomposed_elements : dict
+        Dictionary containing constitutive symmetry components as key, value
+        pairs.
+
+    """
+
+    C = material.C.copy()
+
+    decomposed_elements = {
+        "isotropic": None,
+        "hexagonal": None,
+        "tetragonal": None,
+        "orthorhombic": None,
+        "monoclinic": None
+    }
+    for symmetry_class in decomposed_elements.keys():
+        X = _C_tensor2vector(C)
+        M = _projectors(symmetry_class)
+        X_sc = np.dot(M, X)
+        C_sc = _C_vector2tensor(X_sc)
+        decomposed_elements[symmetry_class] = C_sc
+        C -= C_sc
+
+    return decomposed_elements
+
+
+def _projectors(symmetry_class):
+    """
+    Utility function for serving the required projection matrices for each
+    symmetry class
+
+    Parameters
+    ----------
+    symmetry_class : str
+        Name of symmetry class required.
+
+    Returns
+    -------
+    M : array-like of float, shape(21, 21)
+
+    """
+
+    rt2 = np.sqrt(2)
+    M = np.zeros((21, 21))
+
+    if symmetry_class == "isotropic":
+        M[0:3, 0:3] = 3/15
+        M[0:3, 3:6] = rt2/15
+        M[0:3, 6:9] = 2/15
+
+        M[3:6, 0:3] = rt2/15
+        M[3:6, 3:6] = 4/15
+        M[3:6, 6:9] = -rt2/15
+
+        M[6:9, 0:3] = 2/15
+        M[6:9, 3:6] = -rt2/15
+        M[6:9, 6:9] = 1/5
+
+    if symmetry_class == "hexagonal":
+        M[0:2, 0:2] = 3/8
+        M[0:2, 5] = M[5, 0:2] = 1/(4*rt2)
+        M[0:2, 8] = M[8, 0:2] = 1/4
+        M[2, 2] = 1.
+        M[3:5, 3:5] = M[6:8, 6:8] = M[8, 8] = 1/2
+        M[5, 5] = 3/4
+        M[5, 8] = M[8, 5] = -1/(2*rt2)
+
+    if symmetry_class == "tetragonal":
+        M[2, 2] = M[5, 5] = M[8, 8] = 1.
+        M[0:2, 0:2] = M[3:5, 3:5] = M[6:8, 6:8] = 1/2
+
+    if symmetry_class == "orthorhombic":
+        np.fill_diagonal(M, 1)
+        M[9:, 9:] = 0
+
+    if symmetry_class == "monoclinic":
+        np.fill_diagonal(M, 1)
+        M[:, 10:12] = M[:, 13:15] = M[:, 16:18] = M[:, 19:21] = 0
+
+    return M
+
+def _C_tensor2vector(C):
+    """
+    Convert an elastic tensor, C, to an elastic vector, X, as set out in
+    Equation 2.2 of Browaeys and Chevrot, 2004.
+
+    Parameters
+    ----------
+    C : array-like of float, shape(6, 6)
+        Elastic tensor for the material, in GPa, to be converted.
+
+    Returns
+    -------
+    X : array-like of float, shape(21)
+        Elastic vector representation of the elastic tensor, C, in GPa.
+
+    """
+
+    rt2 = np.sqrt(2)
+    X = np.zeros(21)
+    X[0:3] = C[0, 0], C[1, 1], C[2, 2]
+    X[3:6] = rt2*C[1, 2], rt2*C[0, 2], rt2*C[0, 1]
+    X[6:9] = 2*C[3, 3], 2*C[4, 4], 2*C[5, 5]
+    X[9:12] = 2*C[0, 3], 2*C[1, 4], 2*C[2, 5]
+    X[12:15] = 2*C[2, 3], 2*C[0, 4], 2*C[1, 5]
+    X[15:18] = 2*C[1, 3], 2*C[2, 4], 2*C[0, 5]
+    X[18:21] = 2*rt2*C[4, 5], 2*rt2*C[3, 5], 2*rt2*C[3, 4]
+
+    return X
+
+
+def _C_vector2tensor(X):
+    """
+    Convert an elastic vector, X, to an elastic vector, C, as set out in
+    Equation 2.2 of Browaeys and Chevrot, 2004.
+
+    Parameters
+    ----------
+    X : array-like of float, shape(21)
+        Elastic vector representation of the elastic tensor, C, in GPa.
+
+    Returns
+    -------
+    C : array-like of float, shape(6, 6)
+        Elastic tensor for the material, in GPa, to be converted.
+
+    """
+
+    rt2 = np.sqrt(2)
+    rt22 = rt2*2
+    C = np.array([
+        [    X[0], X[5]/rt2, X[4]/rt2,     X[9]/2,    X[13]/2,    X[17]/2],
+        [X[5]/rt2,     X[1], X[3]/rt2,    X[15]/2,    X[10]/2,    X[14]/2],
+        [X[4]/rt2, X[3]/rt2,     X[2],    X[12]/2,    X[16]/2,    X[11]/2],
+        [  X[9]/2,  X[15]/2,  X[12]/2,     X[6]/2, X[20]/rt22, X[19]/rt22],
+        [ X[13]/2,  X[10]/2,  X[16]/2, X[20]/rt22,     X[7]/2, X[18]/rt22],
+        [ X[17]/2,  X[14]/2,  X[11]/2, X[19]/rt22, X[18]/rt22,     X[8]/2]
+    ])
+
+    return C
 
 def _vp2rho(vp):
     """
