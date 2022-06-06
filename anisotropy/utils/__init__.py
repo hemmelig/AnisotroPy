@@ -11,4 +11,6 @@ provide basic utility functions that are used throughout the AnisotroPy package.
 
 """
 
-from .util import *
+__all__ = ["core", "errors"]
+
+from .core import *
