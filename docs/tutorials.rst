@@ -6,4 +6,5 @@ Here we provide a few tutorials that explore each element of the package in more
 .. toctree::
    :maxdepth: 1
 
-   tutorials/hudson
+   tutorials/material_class
+   tutorials/material_mixing
