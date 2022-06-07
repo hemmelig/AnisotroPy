@@ -29,9 +29,9 @@ AnisotroPy was developed and tested on Ubuntu 20.04, with the intention of being
 
 Citation
 --------
-We hope to have a publication coming out soon:
+We hope to have a publication at some point:
 
-Bacon, C.A., and Rawlinson, N. AnisotroPy: a toolkit for the study of seismic anisotropy. (to be submitted to Journal of Open Source Software).
+Bacon, C.A. (et al.?!). AnisotroPy: a toolkit for the study of seismic anisotropy. (to be submitted to Journal of Open Source Software).
 
 Contact
 -------
