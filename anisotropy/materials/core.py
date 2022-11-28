@@ -279,11 +279,28 @@ class Material:
         return gvp, gvs1, gvs2
 
     def rotate(self, alpha, beta, gamma, order=[1, 2, 3], mode="extrinsic"):
-        """Helper function to perform an arbitrary 3-D rotation of C."""
+        """
+        Arbitrary 3-D rotation of C.
+
+        Parameters
+        ----------
+        alpha : float
+            The yaw of the rotation (i.e. azimuth).
+        beta : float
+            The pitch of the rotation (i.e. the inclination)
+        gamma : float
+            The roll of the rotation (i.e. the wibbly wobbly side to sidey)
+        order : list of int
+            Defines the order of rotation. Important, since rotations are not
+            generally commutative.
+        mode : {"instrinsic", "extrinsic"}
+            Form of rotation.
+        """
         R = self._rotate_3d(alpha, beta, gamma, order, mode)
         Q = self._build_bond_matrix(R)
+        self.C = np.dot(Q, np.dot(self.C, Q.T))
 
-        return np.dot(Q, np.dot(self.C, Q.T))
+        return self
 
     def _rotate_3d(self, alpha, beta, gamma, order=[1, 2, 3], mode="extrinsic"):
         """
