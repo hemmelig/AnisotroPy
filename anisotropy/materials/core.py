@@ -728,6 +728,67 @@ def isotropic_C(vp=None, vs=None, rho=None, la=None, mu=None, K=None, G=None):
     return Material(C, rho, material_id="isotropic material")
 
 
+def hexagonal1_C(vp, vs, ani, rho):
+    """
+    Voigt's representation of simplified 1-parameter hexagonal symmetry, with anisotropy:
+
+    ani = (V∥ - V⊥) / V · 100%
+
+    where V∥ and V⊥ are the seismic velocities parallel and perpendicular to the
+    symmetry axis and V is the average seismic velocity. P- and S-wave
+    anisotropy are equal and pure elliptical (Levin and Park, 1997, GJI). The
+    anisotropy axis is parallel to x1.
+
+    Parameters
+    ----------
+    vp : float
+        Isotropic P wave velocity. Units of km/s.
+    vs : float
+        Isotropic S wave velocity. Units of km/s.
+    ani : float
+        anisotropy% = (V∥ - V⊥) / V · 100%
+    rho : float
+        Bulk density of material. Units of g/cm^3
+
+    Returns
+    -------
+    C : 6x6 array of floats
+        Isotropic elastic stiffness tensor in Voigt matrix form.
+
+    """
+
+    C = np.zeros((6, 6))
+
+    da = vp * ani / 100.0
+    db = vs * ani / 100.0
+    AA = rho * (vp - da / 2.0) ** 2.0
+    CC = rho * (vp + da / 2.0) ** 2.0
+    LL = rho * (vs + db / 2.0) ** 2.0
+    NN = rho * (vs - db / 2.0) ** 2.0
+    AC = rho * vp**2
+    FF = -LL + np.sqrt(
+        (2.0 * AC) ** 2 - 2.0 * AC * (AA + CC + 2.0 * LL) + (AA + LL) * (CC + LL)
+    )
+
+    C[2, 2] = AA
+    C[1, 1] = AA
+    C[0, 0] = CC
+
+    C[2, 1] = AA - 2 * NN
+    C[1, 2] = AA - 2 * NN
+
+    C[2, 0] = FF
+    C[0, 2] = FF
+    C[1, 0] = FF
+    C[0, 1] = FF
+
+    C[5, 5] = LL
+    C[4, 4] = LL
+    C[3, 3] = NN
+
+    return Material(C, rho, material_id="hexagonal material")
+
+
 def decompose_C(material, symmetry="all"):
     """
     Decomposes an elastic tensor after the formulation set out in Browaeys and
