@@ -302,6 +302,160 @@ class Material:
 
         return self
 
+    def plot_polefigure(
+        self,
+        which="vp",
+        incs=[],
+        azis=[],
+        incr=(None, None),
+        minmax=True,
+        cmap="inferno_r",
+        ax=None,
+        fig_kw={"figsize": (3, 3), "constrained_layout": True},
+    ):
+        """
+        Plot seismic velocity on stereonet
+
+        Parameters:
+        -----------
+            which: (str)
+                which velocity to plot: vp, vs1, vs2, vpvs1, or vpvs2
+            incs: (list)
+                Limited inclinations (degree from x1-x2-plane to x3) to plot
+            azis: (list)
+                Limited azimuths (degree up from x1 to x2) to plot
+            incr: (2*tuple)
+                Increments in inclination and azimuth
+            minmax: (bool)
+                Show minimum / maximum values in plot
+            cmap: (str)
+                Color map to use to fraw colors
+            ax: (matpltlib.Axes)
+                Draw axis in external figure
+            fig_kw: (dict)
+                kwargs passed to created figure (ignored when ax is used)
+        """
+
+        # import matplotlib.pyplot as mp
+        import mplstereonet as ms
+        from matplotlib.colors import Normalize
+        from matplotlib.cm import ScalarMappable
+
+        def _xys(mr, ir, maz, iaz):
+            """
+            Return recatangle corners from midpoint (m) and increment (i) in radial
+            (r) and azimuthal (az) direction
+            """
+            x1 = maz - iaz / 2
+            x2 = maz + iaz / 2
+            y1 = mr - ir / 2
+            y2 = mr + ir / 2
+            xs = [x1, x1, x2, x2]
+            ys = [y1, y2, y2, y1]
+            return xs, ys
+
+        def _inc(arr):
+            """Smallest increment within array"""
+            try:
+                ad = abs(np.diff(arr))
+                return min(ad[ad > 0])
+            except ValueError:
+                print("Could not determine increment of fixed point spacing")
+                return 0
+
+        _label = {
+            "vp": "$V_P$ (km/s)",
+            "vs1": "$V_{{{S1}}}$ (km/s)",
+            "vs2": "$V_{{{S2}}}$ (km/s)",
+            "vpvs1": "$V_P/V_{{{S1}}}$",
+            "vpvs2": "$V_P/V_{{{S2}}}$",
+        }
+
+        docont = False
+        if not any(incs) or not any(azis):
+            # Evenly sample sphere for triangulation
+            # https://stackoverflow.com/questions/
+            # 9600801/evenly-distributing-n-points-on-a-sphere
+            n = 500
+            idx = np.arange(0, n, dtype=float) + 0.5
+            incs = ((np.pi - np.arccos(idx / n)) * 180 / np.pi) % 90
+            azis = ((np.pi * (1 + 5**0.5) * idx) * 180 / np.pi) % 360
+
+            # Circumfer for nicer triangulation
+            azis = np.append(azis, np.linspace(0, 360, n // 10))
+            incs = np.append(incs, np.zeros(n // 10))
+            docont = True
+        else:
+            incs = np.array(incs)
+            azis = np.array(azis)
+
+        lons, lats = ms.line(incs, azis)
+
+        vp, vs1, vs2, _, _ = self.phase_velocities(incs, azis)
+
+        if which == "vp":
+            dats = vp
+        elif which == "vs1":
+            dats = vs1
+        elif which == "vs2":
+            dats = vs2
+        elif which == "vpvs1":
+            dats = np.divide(vp, vs1)
+        elif which == "vpvs2":
+            dats = np.divide(vp, vs2)
+        else:
+            msg = f"Unknown 'which': {which}"
+            raise ValueError(msg)
+
+        imin = np.argmin(dats)
+        imax = np.argmax(dats)
+
+        # Get the colors right
+        norm = Normalize(vmin=min(dats), vmax=max(dats))
+        mapper = ScalarMappable(norm=norm, cmap=cmap)
+
+        # Do the plot
+        if ax:
+            # Make sure it's a stereonet
+            fig = ax.get_figure()
+            spec = ax.get_subplotspec()
+            ax.set_axis_off()
+            del ax
+            ax = fig.add_subplot(spec, projection="stereonet")
+        else:
+            fig, ax = ms.subplots(1, 1, **fig_kw)
+
+        ax.set_azimuth_ticks([])
+
+        if docont:
+            # contour the half sphere
+            ax.tricontourf(lons, lats, dats, norm=norm, cmap=cmap)
+        else:
+            # fill only sampled segments
+            # find angle increments
+            dinc = incr[0]
+            if not dinc:
+                dinc = _inc(incs)
+            daz = incr[1]
+            if not daz:
+                daz = _inc(azis)
+
+            for inc, az, dat in zip(incs, azis, dats):
+                xs, ys = _xys(inc, dinc, az, daz)
+                lon, lat = ms.line(ys, xs)
+                ax.fill(lon, lat, color=mapper.cmap(norm(dat)))
+
+        # Write out minimum and maximum
+        ax.plot(lons[imin], lats[imin], "o", mec="black", mfc="none")
+        ax.plot(lons[imax], lats[imax], "x", mec="black", mfc="none")
+
+        cb = fig.colorbar(mapper, ax=ax, orientation="horizontal", label=_label[which])
+        ticks = [dats[imin], dats[imin] + (dats[imax] - dats[imin])/2, dats[imax]]
+        cb.set_ticks(ticks)
+        cb.set_ticklabels(["{:.2f}".format(t) for t in ticks])
+
+        return fig
+
     def _rotate_3d(self, alpha, beta, gamma, order=[1, 2, 3], mode="extrinsic"):
         """
         Contructs a 3x3 matrix that specifies a 3-D rotation from the Euler
