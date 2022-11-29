@@ -319,6 +319,7 @@ class Material:
         minmax=True,
         proj="angle",
         cmap="inferno_r",
+        norm=None,
         ax=None,
         fig_kw={"figsize": (3, 3), "constrained_layout": True},
     ):
@@ -341,6 +342,8 @@ class Material:
                 Choose equal-angle or equal-area projection
             cmap: (str)
                 Color map to use to fraw colors
+            norm: (matplotlib.Normalize)
+                Supply custom norm for color range
             ax: (matpltlib.Axes)
                 Draw axis in external figure
             fig_kw: (dict)
@@ -386,17 +389,11 @@ class Material:
 
         docont = False
         if not any(incs) or not any(azis):
-            # Evenly sample sphere for triangulation
-            # https://stackoverflow.com/questions/
-            # 9600801/evenly-distributing-n-points-on-a-sphere
-            n = 500
-            idx = np.arange(0, n, dtype=float) + 0.5
-            incs = ((np.pi - np.arccos(idx / n)) * 180 / np.pi) % 90
-            azis = ((np.pi * (1 + 5**0.5) * idx) * 180 / np.pi) % 360
+            incs, azis = utils.sample_sphere(500)
 
             # Circumfer for nicer triangulation
-            azis = np.append(azis, np.linspace(0, 360, n // 10))
-            incs = np.append(incs, np.zeros(n // 10))
+            azis = np.append(azis, np.linspace(0, 360, 60))
+            incs = np.append(incs, np.zeros(60))
             docont = True
         else:
             incs = np.array(incs)
@@ -424,7 +421,8 @@ class Material:
         imax = np.argmax(dats)
 
         # Get the colors right
-        norm = Normalize(vmin=min(dats), vmax=max(dats))
+        if not norm:
+            norm = Normalize(vmin=min(dats), vmax=max(dats))
         mapper = ScalarMappable(norm=norm, cmap=cmap)
 
         # Do the plot
