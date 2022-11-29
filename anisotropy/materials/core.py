@@ -302,7 +302,7 @@ class Material:
 
         return self
 
-    def plot_polefigure(
+    def plot_velocity(
         self,
         which="vp",
         incs=[],
