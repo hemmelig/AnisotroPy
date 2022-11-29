@@ -233,5 +233,50 @@ class TestMaterials(unittest.TestCase):
         print("All tests for the function '_vp2rho' have passed!")
         print("="*60)
 
+    def test_phase_velocities(self):
+        print()
+        print("="*60)
+        print("Testing the function 'phase_velocities'...")
+        print("\tTest 1 - testing against anisotropic values")
+        print("\treported for single crystal antigorite...")
+        from anisotropy.materials.database import load
+        atg = load("antigorite")
+
+        # Table 1 of Bezacier et al.
+        # Run no. 10 (note inconsicenty in angles in their table)
+        vp, vs1, vs2, _, _ = atg.phase_velocities(90, 0)
+        self.assertAlmostEqual(vp[0], 6.08, delta=0.01)
+        self.assertAlmostEqual(vs1[0], 2.642, delta=0.01)
+        self.assertAlmostEqual(vs2[0], 2.563, delta=0.015)
+
+        # Run no. 906
+        vp, vs1, vs2, _, _ = atg.phase_velocities(0, 68.71)
+        self.assertAlmostEqual(vp[0], 8.758, delta=0.001)
+        self.assertAlmostEqual(vs1[0], 5.107, delta=0.001)
+        self.assertAlmostEqual(vs2[0], 2.451, delta=0.002)
+
+        # Now isotropic velocities
+        print("\tTest 2 - testing against isotropic values...")
+        iatg = atg.isotropic
+        
+        # Make equal length samples of focal sphere the silly way
+        incs = []
+        azis = []
+        for inc in range(0, 90, 30):
+            for azi in range(0, 360, 30):
+                incs.append(inc)
+                azis.append(azi)
+
+        # Voigt averages of Tab. 3 of Bezacier et al.
+        vp, vs1, vs2, _, _ = iatg.phase_velocities(incs, azis)
+        for p, s1, s2 in zip(vp, vs1, vs2):
+            self.assertAlmostEqual(p, 7.3, delta=0.01)
+            self.assertAlmostEqual(s1, 4.29, delta=0.01)
+            self.assertAlmostEqual(s2, 4.29, delta=0.01)
+
+        print("\t\t ...tests pass!")
+        print("All tests for the function 'phase_velocities' have passed!")
+        print("="*60)
+
 if __name__ == "__main__":
     unittest.main()
