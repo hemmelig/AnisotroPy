@@ -317,6 +317,7 @@ class Material:
         azis=[],
         incr=(None, None),
         minmax=True,
+        proj="angle",
         cmap="inferno_r",
         ax=None,
         fig_kw={"figsize": (3, 3), "constrained_layout": True},
@@ -336,6 +337,8 @@ class Material:
                 Increments in inclination and azimuth
             minmax: (bool)
                 Show minimum / maximum values in plot
+            proj: {"angle", "area"}
+                Choose equal-angle or equal-area projection
             cmap: (str)
                 Color map to use to fraw colors
             ax: (matpltlib.Axes)
@@ -378,6 +381,8 @@ class Material:
             "vpvs1": "$V_P/V_{{{S1}}}$",
             "vpvs2": "$V_P/V_{{{S2}}}$",
         }
+
+        _proj = {"area": "equal_area_stereonet", "angle": "equal_angle_stereonet"}
 
         docont = False
         if not any(incs) or not any(azis):
@@ -429,9 +434,9 @@ class Material:
             spec = ax.get_subplotspec()
             ax.set_axis_off()
             del ax
-            ax = fig.add_subplot(spec, projection="stereonet")
+            ax = fig.add_subplot(spec, projection=_proj[proj])
         else:
-            fig, ax = ms.subplots(1, 1, **fig_kw)
+            fig, ax = ms.subplots(1, 1, **fig_kw, projection=_proj[proj])
 
         ax.set_azimuth_ticks([])
 
@@ -454,8 +459,9 @@ class Material:
                 ax.fill(lon, lat, color=mapper.cmap(norm(dat)))
 
         # Write out minimum and maximum
-        ax.plot(lons[imin], lats[imin], "o", mec="black", mfc="none")
-        ax.plot(lons[imax], lats[imax], "x", mec="black", mfc="none")
+        if minmax:
+            ax.plot(lons[imin], lats[imin], "o", mec="black", mfc="none")
+            ax.plot(lons[imax], lats[imax], "x", mec="white", mfc="none")
 
         cb = fig.colorbar(mapper, ax=ax, orientation="horizontal", label=_label[which])
         ticks = [dats[imin], dats[imin] + (dats[imax] - dats[imin])/2, dats[imax]]
