@@ -285,6 +285,11 @@ class TestMaterials(unittest.TestCase):
             self.assertAlmostEqual(p, 6.76, delta=0.01)
             self.assertAlmostEqual(s1, 3.83, delta=0.01)
             self.assertAlmostEqual(s2, 3.83, delta=0.01)
+            
+            # Make sure no complex values were returned
+            self.assertIsInstance(p, float)
+            self.assertIsInstance(s1, float)
+            self.assertIsInstance(s2, float)
 
         print("\t\t ...tests pass!")
         print("All tests for the function 'phase_velocities' have passed!")

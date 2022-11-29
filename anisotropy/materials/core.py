@@ -188,7 +188,8 @@ class Material:
             ip = np.argmax(eigenvalues)
             is2 = np.argmin(eigenvalues)
             is1 = 3 - ip - is2
-            phase_velocities = np.sqrt(eigenvalues/self.rho)
+            # abs to ensure real velocity
+            phase_velocities = abs(np.sqrt(eigenvalues/self.rho))
 
             vp.append(phase_velocities[ip])
             vs1.append(phase_velocities[is1])
