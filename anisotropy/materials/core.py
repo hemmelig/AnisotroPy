@@ -575,7 +575,11 @@ class Material:
 
         rotated_vec = utils.rotate2xy(plane.copy(), azimuth, inclination)
 
-        φ = np.rad2deg(np.arctan2(rotated_vec[1], rotated_vec[2]))
+        try:
+            φ = np.rad2deg(np.arctan2(rotated_vec[1], rotated_vec[2]))
+        except TypeError:
+            # rotated_vec may be complex for isotropic media
+            φ = np.nan
         φ = φ + 180 if φ < -90 else φ
         φ = φ - 180 if φ > 90 else φ
 
@@ -604,17 +608,17 @@ class Material:
 
     @property
     def tetragonal(self):
-        """Returns the isotropic component of elastic material."""
+        """Returns the tetragonal component of elastic material."""
         return Material(decompose_C(self)["tetragonal"], self.rho)
 
     @property
     def orthorhombic(self):
-        """Returns the isotropic component of elastic material."""
+        """Returns the orthorombic component of elastic material."""
         return Material(decompose_C(self)["orthorhombic"], self.rho)
 
     @property
     def monoclinic(self):
-        """Returns the isotropic component of elastic material."""
+        """Returns the monoclinic component of elastic material."""
         return Material(decompose_C(self)["monoclinic"], self.rho)
 
     @property

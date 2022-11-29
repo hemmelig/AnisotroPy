@@ -240,6 +240,7 @@ class TestMaterials(unittest.TestCase):
         print("\tTest 1 - testing against anisotropic values")
         print("\treported for single crystal antigorite...")
         from anisotropy.materials.database import load
+        from anisotropy.materials.core import isotropic_C
         atg = load("antigorite")
 
         # Table 1 of Bezacier et al.
@@ -273,6 +274,17 @@ class TestMaterials(unittest.TestCase):
             self.assertAlmostEqual(p, 7.3, delta=0.01)
             self.assertAlmostEqual(s1, 4.29, delta=0.01)
             self.assertAlmostEqual(s2, 4.29, delta=0.01)
+
+        # More isotropic velocities
+        print("\tTest 3 - testing against isotropic hill-averages...")
+        iatg = isotropic_C(K=atg.bulk_modulus, G=atg.shear_modulus, rho=atg.rho) 
+
+        # Hill averages of Tab. 3 of Bezacier et al.
+        vp, vs1, vs2, _, _ = iatg.phase_velocities(incs, azis)
+        for p, s1, s2 in zip(vp, vs1, vs2):
+            self.assertAlmostEqual(p, 6.76, delta=0.01)
+            self.assertAlmostEqual(s1, 3.83, delta=0.01)
+            self.assertAlmostEqual(s2, 3.83, delta=0.01)
 
         print("\t\t ...tests pass!")
         print("All tests for the function 'phase_velocities' have passed!")
