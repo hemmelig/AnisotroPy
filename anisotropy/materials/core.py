@@ -279,7 +279,7 @@ class Material:
 
         return gvp, gvs1, gvs2
 
-    def rotate(self, alpha, beta, gamma, order=[1, 2, 3], mode="extrinsic"):
+    def rotate(self, alpha, beta, gamma, order=[1, 2, 3], mode="extrinsic", copy=False):
         """
         Arbitrary 3-D rotation of C.
 
@@ -296,11 +296,18 @@ class Material:
             generally commutative.
         mode : {"instrinsic", "extrinsic"}
             Form of rotation.
+        copy: (bool)
+            Return a copy of the rotated tensor, leave self unchanged
         """
+
         R = self._rotate_3d(alpha, beta, gamma, order, mode)
         Q = self._build_bond_matrix(R)
-        self.C = np.dot(Q, np.dot(self.C, Q.T))
+        C = np.dot(Q, np.dot(self.C, Q.T))
 
+        if copy:
+            return Material(C, self.rho, self.id)
+
+        self.C = C
         return self
 
     def plot_velocity(
@@ -473,7 +480,7 @@ class Material:
         order : list of int
             Defines the order of rotation. Important, since rotations are not
             generally commutative.
-        mode : {"instrinsic", "extrinsic"}
+        mode : {"int", "intrinsic", "ext", "extrinsic"}
             Form of rotation.
 
         Returns
@@ -482,11 +489,16 @@ class Material:
             Composite rotation matrix.
 
         """
+        _int = ["int", "intrinsic"]
+        _ext = ["ext", "extrinsic"]
 
-        if mode == "intrinsic":
+        if mode in _int:
             r_z, r_y, r_x = np.deg2rad([alpha, beta, gamma])
-        elif mode == "extrinsic":
+        elif mode in _ext:
             r_z, r_y, r_x = np.deg2rad([gamma, beta, alpha])
+        else:
+            msg = "Unknwon mode, must be one of: " + ", ".join(_int + _ext)
+            raise ValueError(msg)
 
         R_z = np.array([[ np.cos(r_z),  np.sin(r_z), 0],
                         [-np.sin(r_z),  np.cos(r_z), 0],
