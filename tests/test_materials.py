@@ -238,7 +238,7 @@ class TestMaterials(unittest.TestCase):
         LL = rho * (vs0 + db / 2.0) ** 2.0
         NN = rho * (vs0 - db / 2.0) ** 2.0
 
-        # Auld (1973) Acoustic waves in solid. c66 and c33 are here unique!
+        # Auld (1973) Acoustic waves in solid. c66 and c33 are here the unique axes
         vsh = 1/(np.sqrt(rho / (LL * np.sin(inc) ** 2 + NN * np.cos(inc) ** 2)))
 
         self.assertTrue(np.allclose(vs2, vsh))  # this is working
