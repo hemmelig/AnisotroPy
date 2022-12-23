@@ -45,7 +45,7 @@ def load(material_id):
 def _antigorite():
     """
     Elastic constants of the mineral antigorite (GPa) in Voigt notation.
-    From:
+    Unrotated sample from Table 2 of:
       Bezacier, L., Reynard, B., Bass, J.D., Sanchez-Valle, C. and Van de
       Moortèle, B., 2010. Elasticity of antigorite, seismic detection of
       serpentinites, and anisotropy in subduction zones. Earth and Planetary
@@ -71,6 +71,35 @@ def _antigorite():
 
     return C, rho, reference
 
+
+def _antigorite_agg():
+    """
+    Elastic constants of an antigorite aggregate (GPa) in Voigt notation.
+    Voigt-Reuss-Hill averages reported in Table 4.
+    From:
+      Bezacier, L., Reynard, B., Bass, J.D., Sanchez-Valle, C. and Van de
+      Moortèle, B., 2010. Elasticity of antigorite, seismic detection of
+      serpentinites, and anisotropy in subduction zones. Earth and Planetary
+      Science Letters, 289(1-2), pp.198-208.
+
+    """
+    C = [[89.46,  27.28,  30.68, 3.50, -3.36, -0.92],
+         [27.28, 171.98,  54.19,-7.04,  7.13, 13.00],
+         [30.68,  54.19, 162.98,-6.71, 25.65,  1.82],
+         [ 3.50,  -7.04, -6.71, 56.48,  2.17,  7.95],
+         [-3.36,   7.13, 25.65,  2.17, 31.56,  3.39],
+         [-0.92,  13.00,  1.82,  7.95,  3.39, 27.00]]
+
+    rho = 2.620
+
+    reference = (
+        "Bezacier, L., Reynard, B., Bass, J.D., Sanchez-Valle, C. and Van de\n"
+        "Moortèle, B., 2010. Elasticity of antigorite, seismic detection of\ns"
+        "erpentinites, and anisotropy in subduction zones. Earth and Planetary"
+        "\nScience Letters, 289(1-2), pp.198-208."
+    )
+
+    return C, rho, reference
 
 def _biotite():
     """
@@ -646,6 +675,150 @@ def _olivine():
     )
 
     return C, rho, reference
+
+
+def _olivine_agg():
+    """
+    Elastic constants of an olivine aggregate (GPa) in Voigt notation.
+    "Total Database" from Table 2 in:
+    Ismaïl, W.B. & Mainprice, D., 1998. An olivine fabric database: an overview
+    of upper mantle fabrics and seismic anisotropy, Tectonophysics, 296 (1-2)
+    https://doi.org/10.1016/S0040-1951(98)00141-3.
+
+    """
+
+    C = [[ 195.45,  71.11,  72.08,  0.06,  0.09,  0.08],
+         [  71.11, 236.91,  72.37,  0.17,  0.20,  0.11],
+         [  72.08,  72.37, 205.92,  0.37,  0.21,  0.09],
+         [   0.06,   0.17,   0.37, 71.37,  0.18,  0.36],
+         [   0.09,   0.20,   0.21,  0.18, 62.99,  0.06],
+         [   0.08,   0.11,   0.09,  0.36,  0.06, 69.77]]
+
+    rho = 3.355
+    
+    reference = (
+        "Ismaïl, W.B. & Mainprice, D., 1998. An olivine fabric database: An "
+        "overview \n of upper mantle fabrics and seismic anisotropy, "
+        "Tectonophysics, 296 (1-2) \n"
+        "https://doi.org/10.1016/S0040-1951(98)00141-3."
+    )
+
+    return C, rho, reference
+
+
+def _olivine_agg_fastridge():
+    """
+    Elastic constants of an olivine aggregate (GPa) in Voigt notation.
+    "Fast Spreading Ridge" from Table 2 in:
+    Ismaïl, W.B. & Mainprice, D., 1998. An olivine fabric database: an overview
+    of upper mantle fabrics and seismic anisotropy, Tectonophysics, 296 (1-2)
+    https://doi.org/10.1016/S0040-1951(98)00141-3.
+
+    """
+
+    C = [[195.91,  71.12,  72.21,  0.07,  0.24,  0.14],
+         [ 71.12, 239.36,  71.87,  0.03,  0.36,  0.16],
+         [ 72.21,  71.87, 203.72,  0.40,  0.39,  0.02],
+         [  0.07,   0.03,   0.40, 71.05,  0.15,  0.60],
+         [  0.24,   0.36,   0.39,  0.15, 62.49,  0.01],
+         [  0.14,   0.16,   0.02,  0.60,  0.01, 70.24]]
+
+    rho = 3.355
+    
+    reference = (
+        "Ismaïl, W.B. & Mainprice, D., 1998. An olivine fabric database: an"
+        "overview \n of upper mantle fabrics and seismic anisotropy,"
+        "Tectonophysics, 296 (1-2) \n"
+        "https://doi.org/10.1016/S0040-1951(98)00141-3."
+    )
+
+    return C, rho, reference
+          
+
+def _olivine_agg_subduction():
+    """
+    Elastic constants of an olivine aggregate (GPa) in Voigt notation.
+    "Subduction Zone" from Table 2 in:
+    Ismaïl, W.B. & Mainprice, D., 1998. An olivine fabric database: an overview
+    of upper mantle fabrics and seismic anisotropy, Tectonophysics, 296 (1-2)
+    https://doi.org/10.1016/S0040-1951(98)00141-3.
+
+    """
+
+    C = [[192.07, 69.92, 72.35, 0.21, 0.04, 0.1],
+         [69.92, 237.08, 73.47, 0.31, 0.25, 0.61],
+         [72.35, 73.47, 208.75, 0.30, 0.23, 0.28],
+         [0.21, 0.31, 0.30, 72.55, 0.01, 0.38],
+         [0.04, 0.25, 0.23, 0.01, 63.28, 0.09],
+         [0.10, 0.61, 0.28, 0.38, 0.09, 68.50]]
+
+    rho = 3.355
+    
+    reference = (
+        "Ismaïl, W.B. & Mainprice, D., 1998. An olivine fabric database: an"
+        "overview \n of upper mantle fabrics and seismic anisotropy,"
+        "Tectonophysics, 296 (1-2) \n"
+        "https://doi.org/10.1016/S0040-1951(98)00141-3."
+    )
+
+    return C, rho, reference
+
+
+def _olivine_agg_kimberlite():
+    """
+    Elastic constants of an olivine aggregate (GPa) in Voigt notation.
+    "Subduction Zone" from Table 2 in:
+    Ismaïl, W.B. & Mainprice, D., 1998. An olivine fabric database: an overview
+    of upper mantle fabrics and seismic anisotropy, Tectonophysics, 296 (1-2)
+    https://doi.org/10.1016/S0040-1951(98)00141-3.
+
+    """
+
+    C = [[194.51, 70.79, 71.83, 0.12, 0.78, 0.36],
+         [70.79, 229.24, 73.21, 0.32, 0.32, 0.01],
+         [71.83, 73.21, 213.98, 0.22, 0.52, 0.22],
+         [0.12, 0.32, 0.22, 71.66, 0.06, 0.38],
+         [0.78, 0.19, 0.52, 0.06, 64.49, 0.13],
+         [0.36, 0.01, 0.22, 0.38, 0.13, 68.27]]
+
+    rho = 3.355
+    
+    reference = (
+        "Ismaïl, W.B. & Mainprice, D., 1998. An olivine fabric database: an"
+        "overview \n of upper mantle fabrics and seismic anisotropy,"
+        "Tectonophysics, 296 (1-2) \n"
+        "https://doi.org/10.1016/S0040-1951(98)00141-3."
+    )
+
+    return C, rho, reference
+#            Kimberlites
+#                        
+#                  
+#C11        194.5100
+#C12         70.7900
+#                        
+#C13         71.8300     
+#C14          0.1200     
+#C15          0.7800     
+#C16          0.3600     
+#C22        229.2400
+#C23         73.2100
+#                        
+#C24          0.3200
+#C25          0.1900
+#C26          0.0100     
+#C33        213.9800
+#C34          0.2200
+#C35          0.5200
+#                        
+#C36          0.2200     
+#C44         71.6600     
+#C45          0.0600   
+#C46          0.3800         
+#C55         64.4900
+#C56          0.1300   
+#                       
+#C66         68.2700     
 
 
 def _orthopyroxene():
