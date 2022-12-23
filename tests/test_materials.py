@@ -218,6 +218,31 @@ class TestMaterials(unittest.TestCase):
         print("All tests for the function 'isotropic_C' have passed!")
         print("="*60)
 
+    def test_hexagonal1_C(self):
+
+        vp0 = 6
+        vs0 = 3
+        ani = 50
+        rho = 5
+        incs = np.array([0, 30, 60, 90])
+        azis = [0] * len(incs)
+
+        hex1_material = materials.hexagonal1_C(vp0, vs0, ani, rho)
+        _, _, vs2, _, _ = hex1_material.phase_velocities(incs, azis)
+
+        # Theta is meassured dwon from the z axis.
+        inc = (90 - incs) * np.pi / 180
+
+        # The Hexagonal1 definition of anisotropy
+        db = vs0 * ani / 100.0
+        LL = rho * (vs0 + db / 2.0) ** 2.0
+        NN = rho * (vs0 - db / 2.0) ** 2.0
+
+        # Auld (1973) Acoustic waves in solid. c66 and c33 are here unique!
+        vsh = 1/(np.sqrt(rho / (LL * np.sin(inc) ** 2 + NN * np.cos(inc) ** 2)))
+
+        self.assertTrue(np.allclose(vs2, vsh))  # this is working
+
     def test_birch_law(self):
         print()
         print("="*60)

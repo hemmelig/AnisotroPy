@@ -12,5 +12,5 @@ materials and means of interacting with them.
 """
 
 from .core import (Material, voigt_reuss_hill_average, voigt_average,
-                   reuss_average, isotropic_C)
+                   reuss_average, isotropic_C, hexagonal1_C)
 from .database import load
