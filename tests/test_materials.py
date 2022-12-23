@@ -320,5 +320,28 @@ class TestMaterials(unittest.TestCase):
         print("All tests for the function 'phase_velocities' have passed!")
         print("="*60)
 
+    def test_plot_velocity(self):
+        vp0 = 6
+        vs0 = 3
+        ani = 50
+        rho = 5
+
+        mater = materials.hexagonal1_C(vp0, vs0, ani, rho)
+        
+        # Contour plot
+        fig, ax = mater.plot_velocity()
+
+        # Equal area projection
+        fig, ax = mater.plot_velocity(proj="area")
+
+        # Sample plot
+        fig, ax = mater.plot_velocity(azis=[0, 10, 100, 120], incs=[50, 50, 30, 30])
+
+        fig, ax = mater.plot_velocity(azis=[0, 10], incs=[50, 30], incr=(5, 5))
+
+        fig, ax = mater.plot_velocity(which="vs1")
+        fig, ax = mater.plot_velocity(which="vpvs2")
+
+
 if __name__ == "__main__":
     unittest.main()
