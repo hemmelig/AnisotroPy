@@ -440,7 +440,7 @@ class Material:
 
         if docont:
             # contour the half sphere
-            ax.tricontourf(lons, lats, dats, norm=norm, cmap=cmap)
+            ax.tricontourf(lons, lats, dats, norm=norm, cmap=cmap, linestyles="solid")
         else:
             # fill only sampled segments
             # find angle increments
@@ -464,9 +464,9 @@ class Material:
         cb = fig.colorbar(mapper, ax=ax, orientation="horizontal", label=_label[which])
         ticks = [dats[imin], dats[imin] + (dats[imax] - dats[imin])/2, dats[imax]]
         cb.set_ticks(ticks)
-        cb.set_ticklabels(["{:.2f}".format(t) for t in ticks])
+        cb.set_ticklabels(["{:.1f}".format(t) for t in ticks])
 
-        return fig
+        return fig, ax
 
     def _rotate_3d(self, alpha, beta, gamma, order=[1, 2, 3], mode="extrinsic"):
         """
@@ -735,12 +735,14 @@ def voigt_average(stiffness_tensors, volume_fractions):
     """
 
     # Validate volume fraction sums to unity
-    if np.sum(volume_fractions) != 1:
-        raise ValueError("Volume fractions must sum to unity!")
+    sumfrac = np.sum(volume_fractions)
+    if sumfrac != 1:
+        volume_fractions = np.divide(volume_fractions, sumfrac)
 
-    return np.add(*[C*volume_fraction
-                    for C, volume_fraction
-                    in zip(stiffness_tensors, volume_fractions)])
+    return np.sum([C*volume_fraction
+                   for C, volume_fraction
+                   in zip(stiffness_tensors, volume_fractions)],
+                  axis=0)
 
 
 def reuss_average(stiffness_tensors, volume_fractions):
@@ -777,12 +779,14 @@ def reuss_average(stiffness_tensors, volume_fractions):
     """
 
     # Validate volume fraction sums to unity
-    if np.sum(volume_fractions) != 1:
-        raise ValueError("Volume fractions must sum to unity!")
+    sumfrac = np.sum(volume_fractions)
+    if sumfrac != 1:
+        volume_fractions = np.divide(volume_fractions, sumfrac)
 
-    C_r = np.add(*[np.linalg.inv(C)*volume_fraction
-                   for C, volume_fraction
-                   in zip(stiffness_tensors, volume_fractions)])
+    C_r = np.sum([np.linalg.inv(C)*volume_fraction
+                  for C, volume_fraction
+                  in zip(stiffness_tensors, volume_fractions)],
+                 axis=0)
 
     return np.linalg.inv(C_r)
 
@@ -825,8 +829,9 @@ def voigt_reuss_hill_average(materials, volume_fractions):
     """
 
     # Validate volume fraction sums to unity
-    if np.sum(volume_fractions) != 1:
-        raise ValueError("Volume fractions must sum to unity!")
+    sumfrac = np.sum(volume_fractions)
+    if sumfrac != 1:
+        volume_fractions = np.divide(volume_fractions, sumfrac)
 
     C_v = voigt_average([material.C for material in materials],
                          volume_fractions)
