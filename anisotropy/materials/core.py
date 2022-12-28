@@ -352,7 +352,6 @@ class Material:
 
         """
 
-        # import matplotlib.pyplot as mp
         import mplstereonet as ms
         from matplotlib.colors import Normalize
         from matplotlib.cm import ScalarMappable
