@@ -108,9 +108,9 @@ class TestMaterials(unittest.TestCase):
         self.assertTrue(np.allclose(vrh_C, expected_C))
         print("\t\t ...tests pass!")
 
-        print("\tTest 4 - testing a suite of cases where one\n\t\t expects an"
-              " exception to be raised...")
-        self.assertRaises(ValueError, materials.voigt_reuss_hill_average,
+        print("\tTest 4 - testing a suite of cases where one\n\t\t expects a"
+              " warning to be raised...")
+        self.assertWarns(Warning, materials.voigt_reuss_hill_average,
                           [material1, material2], [0.3, 0.8])
         print("\t\t ...tests pass!")
 
@@ -220,6 +220,9 @@ class TestMaterials(unittest.TestCase):
 
     def test_hexagonal1_C(self):
 
+        print()
+        print("="*60)
+        print("Testing the function 'hexagonal1_C'...")
         vp0 = 6
         vs0 = 3
         ani = 50
@@ -242,6 +245,10 @@ class TestMaterials(unittest.TestCase):
         vsh = 1/(np.sqrt(rho / (LL * np.sin(inc) ** 2 + NN * np.cos(inc) ** 2)))
 
         self.assertTrue(np.allclose(vs2, vsh))  # this is working
+        print("\t\t ...tests pass!")
+
+        print("All tests for the function 'hexagonal1_C' have passed!")
+        print("="*60)
 
     def test_birch_law(self):
         print()
@@ -269,7 +276,7 @@ class TestMaterials(unittest.TestCase):
         atg = load("antigorite")
 
         # Table 1 of Bezacier et al.
-        # Run no. 10 (note inconsicenty in angles in their table)
+        # Run no. 10 (note inconsistency in angles in their table)
         vp, vs1, vs2, _, _ = atg.phase_velocities(90, 0)
         self.assertAlmostEqual(vp[0], 6.08, delta=0.01)
         self.assertAlmostEqual(vs1[0], 2.642, delta=0.01)
@@ -321,27 +328,45 @@ class TestMaterials(unittest.TestCase):
         print("="*60)
 
     def test_plot_velocity(self):
+        print()
+        print("="*60)
+        print("Testing the function 'plot_velocity'...")
         vp0 = 6
         vs0 = 3
         ani = 50
         rho = 5
 
-        mater = materials.hexagonal1_C(vp0, vs0, ani, rho)
+        m = materials.hexagonal1_C(vp0, vs0, ani, rho)
         
         # Contour plot
-        fig, ax = mater.plot_velocity()
+        print("\tTest 1 - testing basic plot...")
+        fig, ax = m.plot_velocity()
+        print("\t\t ...tests pass!")
 
         # Equal area projection
-        fig, ax = mater.plot_velocity(proj="area")
+        print("\tTest 2 - testing equal-area plot...")
+        fig, ax = m.plot_velocity(proj="area")
+        print("\t\t ...tests pass!")
 
         # Sample plot
-        fig, ax = mater.plot_velocity(azis=[0, 10, 100, 120], incs=[50, 50, 30, 30])
+        print("\tTest 3 - testing varied azimuth/inclination plot...")
+        fig, ax = m.plot_velocity(azis=[0, 10, 100, 120], incs=[50, 50, 30, 30])
+        print("\t\t ...tests pass!")
 
-        fig, ax = mater.plot_velocity(azis=[0, 10], incs=[50, 30], incr=(5, 5))
+        print("\tTest 4 - testing varied increments plot...")
+        fig, ax = m.plot_velocity(azis=[0, 10], incs=[50, 30], incr=(5, 5))
+        print("\t\t ...tests pass!")
 
-        fig, ax = mater.plot_velocity(which="vs1")
-        fig, ax = mater.plot_velocity(which="vpvs2")
+        print("\tTest 5 - testing plot showing Vs1...")
+        fig, ax = m.plot_velocity(which="vs1")
+        print("\t\t ...tests pass!")
 
+        print("\tTest 6 - testing plot showing VpVs2...")
+        fig, ax = m.plot_velocity(which="vpvs2")
+        print("\t\t ...tests pass!")
+
+        print("All tests for the function 'plot_velocity' have passed!")
+        print("="*60)
 
 if __name__ == "__main__":
     unittest.main()

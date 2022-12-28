@@ -13,6 +13,7 @@ moduli, etc.
 """
 
 import itertools
+import warnings
 
 import numpy as np
 
@@ -313,8 +314,8 @@ class Material:
     def plot_velocity(
         self,
         which="vp",
-        incs=[],
-        azis=[],
+        incs=None,
+        azis=None,
         incr=(None, None),
         minmax=True,
         proj="angle",
@@ -326,28 +327,29 @@ class Material:
         """
         Plot seismic velocity on stereonet
 
-        Parameters:
-        -----------
-            which: (str)
-                which velocity to plot: vp, vs1, vs2, vpvs1, or vpvs2
-            incs: (list)
-                Limited inclinations (degree from x1-x2-plane to x3) to plot
-            azis: (list)
-                Limited azimuths (degree up from x1 to x2) to plot
-            incr: (2*tuple)
-                Increments in inclination and azimuth
-            minmax: (bool)
-                Show minimum / maximum values in plot
-            proj: {"angle", "area"}
-                Choose equal-angle or equal-area projection
-            cmap: (str)
-                Color map to use to fraw colors
-            norm: (matplotlib.Normalize)
-                Supply custom norm for color range
-            ax: (matpltlib.Axes)
-                Draw axis in external figure
-            fig_kw: (dict)
-                kwargs passed to created figure (ignored when ax is used)
+        Parameters
+        ----------
+        which : str
+            Which velocity to plot: vp, vs1, vs2, vpvs1, or vpvs2.
+        incs : list
+            Limited inclinations (degree from x1-x2-plane to x3) to plot.
+        azis : list
+            Limited azimuths (degree up from x1 to x2) to plot.
+        incr : 2*tuple
+            Increments in inclination and azimuth.
+        minmax : bool
+            Show minimum / maximum values in plot.
+        proj : {"angle", "area"}
+            Choose equal-angle or equal-area projection.
+        cmap : str
+            Color map to use to draw colors.
+        norm : `matplotlib.Normalize` object
+            Supply custom norm for color range.
+        ax : `matpltlib.Axes` object
+            Draw axis in external figure.
+        fig_kw : dict
+            Keyword args passed to created figure (ignored when ax is used).
+
         """
 
         # import matplotlib.pyplot as mp
@@ -388,7 +390,7 @@ class Material:
         _proj = {"area": "equal_area_stereonet", "angle": "equal_angle_stereonet"}
 
         docont = False
-        if not any(incs) or not any(azis):
+        if incs is None or azis is None:
             incs, azis = utils.sample_sphere(500)
 
             # Circumfer for nicer triangulation
@@ -501,7 +503,7 @@ class Material:
         elif mode in _ext:
             r_z, r_y, r_x = np.deg2rad([gamma, beta, alpha])
         else:
-            msg = "Unknwon mode, must be one of: " + ", ".join(_int + _ext)
+            msg = "Unknown mode, must be one of: " + ", ".join(_int + _ext)
             raise ValueError(msg)
 
         R_z = np.array([[ np.cos(r_z),  np.sin(r_z), 0],
@@ -832,6 +834,10 @@ def voigt_reuss_hill_average(materials, volume_fractions):
     sumfrac = np.sum(volume_fractions)
     if sumfrac != 1:
         volume_fractions = np.divide(volume_fractions, sumfrac)
+        warnings.warn(
+            "Volume fractions did not sum to unity - re-normalising."
+            "\nDouble-check your chosen volume fractions are correct."
+        )
 
     C_v = voigt_average([material.C for material in materials],
                          volume_fractions)
