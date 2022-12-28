@@ -31,12 +31,12 @@ Citation
 --------
 If you use this package in your work, please cite the following:
 
-ZENODO DOI.
+AnisotroPy Developers (2022). AnisotroPy: v0.0.1 (v0.0.1). Zenodo. https://doi.org/10.5281/zenodo.5931586
 
 Contact
 -------
 Any comments/questions can be directed to:
-* **Conor Bacon** - conor.bacon [ at ] esc.cam.ac.uk
+* **Conor Bacon** - cbacon [ at ] ldeo.columbia.edu
 
 License
 -------
