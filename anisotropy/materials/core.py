@@ -350,7 +350,6 @@ class Material:
                 kwargs passed to created figure (ignored when ax is used)
         """
 
-        # import matplotlib.pyplot as mp
         import mplstereonet as ms
         from matplotlib.colors import Normalize
         from matplotlib.cm import ScalarMappable
