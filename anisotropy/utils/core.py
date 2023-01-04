@@ -154,3 +154,11 @@ def timeit(*args_, **kwargs_):
             return result
         return wrapper
     return inner_function
+
+def sample_sphere(n):
+    """n even samples over a half sphere"""
+    # https://stackoverflow.com/questions/9600801/evenly-distributing-n-points-on-a-sphere
+    idx = np.arange(0, n, dtype=float) + 0.5
+    incs = ((np.pi - np.arccos(idx / n)) * 180 / np.pi) % 90
+    azis = ((np.pi * (1 + 5**0.5) * idx) * 180 / np.pi) % 360
+    return incs, azis

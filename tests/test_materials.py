@@ -108,9 +108,9 @@ class TestMaterials(unittest.TestCase):
         self.assertTrue(np.allclose(vrh_C, expected_C))
         print("\t\t ...tests pass!")
 
-        print("\tTest 4 - testing a suite of cases where one\n\t\t expects an"
-              " exception to be raised...")
-        self.assertRaises(ValueError, materials.voigt_reuss_hill_average,
+        print("\tTest 4 - testing a suite of cases where one\n\t\t expects a"
+              " warning to be raised...")
+        self.assertWarns(Warning, materials.voigt_reuss_hill_average,
                           [material1, material2], [0.3, 0.8])
         print("\t\t ...tests pass!")
 
@@ -218,6 +218,38 @@ class TestMaterials(unittest.TestCase):
         print("All tests for the function 'isotropic_C' have passed!")
         print("="*60)
 
+    def test_hexagonal1_C(self):
+
+        print()
+        print("="*60)
+        print("Testing the function 'hexagonal1_C'...")
+        vp0 = 6
+        vs0 = 3
+        ani = 50
+        rho = 5
+        incs = np.array([0, 30, 60, 90])
+        azis = [0] * len(incs)
+
+        hex1_material = materials.hexagonal1_C(vp0, vs0, ani, rho)
+        _, _, vs2, _, _ = hex1_material.phase_velocities(incs, azis)
+
+        # Theta is meassured dwon from the z axis.
+        inc = (90 - incs) * np.pi / 180
+
+        # The Hexagonal1 definition of anisotropy
+        db = vs0 * ani / 100.0
+        LL = rho * (vs0 + db / 2.0) ** 2.0
+        NN = rho * (vs0 - db / 2.0) ** 2.0
+
+        # Auld (1973) Acoustic waves in solid. c66 and c33 are here the unique axes
+        vsh = 1/(np.sqrt(rho / (LL * np.sin(inc) ** 2 + NN * np.cos(inc) ** 2)))
+
+        self.assertTrue(np.allclose(vs2, vsh))  # this is working
+        print("\t\t ...tests pass!")
+
+        print("All tests for the function 'hexagonal1_C' have passed!")
+        print("="*60)
+
     def test_birch_law(self):
         print()
         print("="*60)
@@ -231,6 +263,109 @@ class TestMaterials(unittest.TestCase):
         self.assertEqual(_vp2rho(vp), expected_rho)
         print("\t\t ...tests pass!")
         print("All tests for the function '_vp2rho' have passed!")
+        print("="*60)
+
+    def test_phase_velocities(self):
+        print()
+        print("="*60)
+        print("Testing the function 'phase_velocities'...")
+        print("\tTest 1 - testing against anisotropic values")
+        print("\treported for single crystal antigorite...")
+        from anisotropy.materials.database import load
+        from anisotropy.materials.core import isotropic_C
+        atg = load("antigorite")
+
+        # Table 1 of Bezacier et al.
+        # Run no. 10 (note inconsistency in angles in their table)
+        vp, vs1, vs2, _, _ = atg.phase_velocities(90, 0)
+        self.assertAlmostEqual(vp[0], 6.08, delta=0.01)
+        self.assertAlmostEqual(vs1[0], 2.642, delta=0.01)
+        self.assertAlmostEqual(vs2[0], 2.563, delta=0.015)
+
+        # Run no. 906
+        vp, vs1, vs2, _, _ = atg.phase_velocities(0, 68.71)
+        self.assertAlmostEqual(vp[0], 8.758, delta=0.001)
+        self.assertAlmostEqual(vs1[0], 5.107, delta=0.001)
+        self.assertAlmostEqual(vs2[0], 2.451, delta=0.002)
+
+        # Now isotropic velocities
+        print("\tTest 2 - testing against isotropic values...")
+        iatg = atg.isotropic
+        
+        # Make equal length samples of focal sphere the silly way
+        incs = []
+        azis = []
+        for inc in range(0, 90, 30):
+            for azi in range(0, 360, 30):
+                incs.append(inc)
+                azis.append(azi)
+
+        # Voigt averages of Tab. 3 of Bezacier et al.
+        vp, vs1, vs2, _, _ = iatg.phase_velocities(incs, azis)
+        for p, s1, s2 in zip(vp, vs1, vs2):
+            self.assertAlmostEqual(p, 7.3, delta=0.01)
+            self.assertAlmostEqual(s1, 4.29, delta=0.01)
+            self.assertAlmostEqual(s2, 4.29, delta=0.01)
+
+        # More isotropic velocities
+        print("\tTest 3 - testing against isotropic hill-averages...")
+        iatg = isotropic_C(K=atg.bulk_modulus, G=atg.shear_modulus, rho=atg.rho) 
+
+        # Hill averages of Tab. 3 of Bezacier et al.
+        vp, vs1, vs2, _, _ = iatg.phase_velocities(incs, azis)
+        for p, s1, s2 in zip(vp, vs1, vs2):
+            self.assertAlmostEqual(p, 6.76, delta=0.01)
+            self.assertAlmostEqual(s1, 3.83, delta=0.01)
+            self.assertAlmostEqual(s2, 3.83, delta=0.01)
+            
+            # Make sure no complex values were returned
+            self.assertIsInstance(p, float)
+            self.assertIsInstance(s1, float)
+            self.assertIsInstance(s2, float)
+
+        print("\t\t ...tests pass!")
+        print("All tests for the function 'phase_velocities' have passed!")
+        print("="*60)
+
+    def test_plot_velocity(self):
+        print()
+        print("="*60)
+        print("Testing the function 'plot_velocity'...")
+        vp0 = 6
+        vs0 = 3
+        ani = 50
+        rho = 5
+
+        m = materials.hexagonal1_C(vp0, vs0, ani, rho)
+        
+        # Contour plot
+        print("\tTest 1 - testing basic plot...")
+        fig, ax = m.plot_velocity()
+        print("\t\t ...tests pass!")
+
+        # Equal area projection
+        print("\tTest 2 - testing equal-area plot...")
+        fig, ax = m.plot_velocity(proj="area")
+        print("\t\t ...tests pass!")
+
+        # Sample plot
+        print("\tTest 3 - testing varied azimuth/inclination plot...")
+        fig, ax = m.plot_velocity(azis=[0, 10, 100, 120], incs=[50, 50, 30, 30])
+        print("\t\t ...tests pass!")
+
+        print("\tTest 4 - testing varied increments plot...")
+        fig, ax = m.plot_velocity(azis=[0, 10], incs=[50, 30], incr=(5, 5))
+        print("\t\t ...tests pass!")
+
+        print("\tTest 5 - testing plot showing Vs1...")
+        fig, ax = m.plot_velocity(which="vs1")
+        print("\t\t ...tests pass!")
+
+        print("\tTest 6 - testing plot showing VpVs2...")
+        fig, ax = m.plot_velocity(which="vpvs2")
+        print("\t\t ...tests pass!")
+
+        print("All tests for the function 'plot_velocity' have passed!")
         print("="*60)
 
 if __name__ == "__main__":
