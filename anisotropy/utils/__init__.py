@@ -10,3 +10,7 @@ provide basic utility functions that are used throughout the AnisotroPy package.
     (https://www.gnu.org/licenses/gpl-3.0.html)
 
 """
+
+__all__ = ["core", "errors"]
+
+from .core import *

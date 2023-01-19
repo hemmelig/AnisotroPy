@@ -12,9 +12,13 @@ moduli, etc.
 
 """
 
+import itertools
+import warnings
+
 import numpy as np
 
 import anisotropy.utils as utils
+import anisotropy.utils.errors as errors
 
 
 C_iso = np.array([[237.5533,  78.4733,  78.4733,  0.0000,  0.0000,  0.0000],
@@ -45,9 +49,11 @@ class Material:
     is_isotropic : bool
         Tests whether the material is isotropic.
     lame_coefficients : [float, float]
-        Calculates Lame coefficients for the material.
+        Calculates Lamé coefficients for the material.
     bulk_modulus : float
         Calculates the bulk modulus, K, for the material.
+    shear_modulus : float
+        Calculates the shear modulus, G, for the material.
 
     Methods
     -------
@@ -63,11 +69,10 @@ class Material:
 
     TO-DO
     -----
-    - Provide methods to transform between the Voigt-form and full tensor
-      representations of the elasticity tensors
     - Finish documentation
     - Implement method to calculate the isotropic (symmetric) portion of a
       arbitrarily anisotropic stiffness tensor
+    - Remove olivine specific isotropic component
 
     """
 
@@ -77,34 +82,55 @@ class Material:
     
     isotropic = C_iso
 
-    def __init__(self, C, rho):
+    def __init__(self, C, rho, material_id="", reference=""):
         """Instantiate the Material object."""
 
         self.C = C
         self.rho = rho
+        self.id = material_id
+        self.reference = reference
 
     def __str__(self):
         """Pretty string representation of the materials stiffness tensor, C."""
 
         C = self.C
-        str_ = ("C_ijkl =\n\n"
-                f"  {C[0,0]: 8.3f} {C[0, 1]: 8.3f} {C[0, 2]: 8.3f} "
-                f"{C[0, 3]: 8.3f} {C[0, 4]: 8.3f} {C[0, 5]: 8.3f}\n"
-                f"  {C[1,0]: 8.3f} {C[1, 1]: 8.3f} {C[1, 2]: 8.3f} "
-                f"{C[1, 3]: 8.3f} {C[1, 4]: 8.3f} {C[1, 5]: 8.3f}\n"
-                f"  {C[2,0]: 8.3f} {C[2, 1]: 8.3f} {C[2, 2]: 8.3f} "
-                f"{C[2, 3]: 8.3f} {C[2, 4]: 8.3f} {C[2, 5]: 8.3f}\n"
-                f"  {C[3,0]: 8.3f} {C[3, 1]: 8.3f} {C[3, 2]: 8.3f} "
-                f"{C[3, 3]: 8.3f} {C[3, 4]: 8.3f} {C[3, 5]: 8.3f}\n"
-                f"  {C[4,0]: 8.3f} {C[4, 1]: 8.3f} {C[4, 2]: 8.3f} "
-                f"{C[4, 3]: 8.3f} {C[4, 4]: 8.3f} {C[4, 5]: 8.3f}\n"
-                f"  {C[5,0]: 8.3f} {C[5, 1]: 8.3f} {C[5, 2]: 8.3f} "
-                f"{C[5, 3]: 8.3f} {C[5, 4]: 8.3f} {C[5, 5]: 8.3f}\n"
-                f"\nDensity = {self.rho}")
+        str_ = (
+            f"Material ID - {self.id}\n\n"
+            "C_ijkl =\n\n"
+            f"  {C[0,0]: 8.3f} {C[0, 1]: 8.3f} {C[0, 2]: 8.3f} "
+            f"{C[0, 3]: 8.3f} {C[0, 4]: 8.3f} {C[0, 5]: 8.3f}\n"
+            f"  {C[1,0]: 8.3f} {C[1, 1]: 8.3f} {C[1, 2]: 8.3f} "
+            f"{C[1, 3]: 8.3f} {C[1, 4]: 8.3f} {C[1, 5]: 8.3f}\n"
+            f"  {C[2,0]: 8.3f} {C[2, 1]: 8.3f} {C[2, 2]: 8.3f} "
+            f"{C[2, 3]: 8.3f} {C[2, 4]: 8.3f} {C[2, 5]: 8.3f}\n"
+            f"  {C[3,0]: 8.3f} {C[3, 1]: 8.3f} {C[3, 2]: 8.3f} "
+            f"{C[3, 3]: 8.3f} {C[3, 4]: 8.3f} {C[3, 5]: 8.3f}\n"
+            f"  {C[4,0]: 8.3f} {C[4, 1]: 8.3f} {C[4, 2]: 8.3f} "
+            f"{C[4, 3]: 8.3f} {C[4, 4]: 8.3f} {C[4, 5]: 8.3f}\n"
+            f"  {C[5,0]: 8.3f} {C[5, 1]: 8.3f} {C[5, 2]: 8.3f} "
+            f"{C[5, 3]: 8.3f} {C[5, 4]: 8.3f} {C[5, 5]: 8.3f}\n"
+            f"\nDensity (g/cm^3) = {self.rho}\n\n"
+            "Reference\n"
+            f"{self.reference}"
+        )
 
         return str_
 
-    def phase_velocities(self, inclination, azimuth=np.arange(0, 361, 1)):
+    def __eq__(self, other):
+        """Magic method for rich comparison '=='"""
+
+        if not isinstance(other, Material):
+            raise TypeError(
+                "Comparison only valid between anisotropy.materials.Material "
+                "objects."
+            )
+
+        pred1 = np.allclose(self.C, other.C)
+        pred2 = self.rho == other.rho
+
+        return bool(pred1 and pred2)
+
+    def phase_velocities(self, inclination, azimuth=None):
         """
         Calculate the phase velocities for the 6x6 elasticity matrix C along
         the direction (ψ, θ), in degrees, and return P-wave velocity Vp, the
@@ -141,6 +167,8 @@ class Material:
         # Run tests to see if the angles are scalars or lists
         if np.isscalar(azimuth):
             azimuth = [azimuth]
+        elif azimuth is None:
+            azimuth = np.arange(0, 361, 1)
         if np.isscalar(inclination):
             inclination = np.ones(len(azimuth))*inclination
         if len(azimuth) != len(inclination):
@@ -161,19 +189,20 @@ class Material:
             ip = np.argmax(eigenvalues)
             is2 = np.argmin(eigenvalues)
             is1 = 3 - ip - is2
-            phase_velocities = np.sqrt(eigenvalues/self.rho)
+            # abs to ensure real velocity
+            phase_velocities = abs(np.sqrt(eigenvalues/self.rho))
 
             vp.append(phase_velocities[ip])
             vs1.append(phase_velocities[is1])
             vs2.append(phase_velocities[is2])
             φφ.append(
-                self._calculate_polarisation(ψ, θ, x, eigenvectors[:, is1]))
+                self._calculate_polarisation(θ, ψ, x, eigenvectors[:, is1]))
 
         shear_wave_anisotropy = 200*(np.subtract(vs1, vs2)/np.add(vs1, vs2))
 
         return vp, vs1, vs2, φφ, shear_wave_anisotropy
 
-    def group_velocities(self, inclination, azimuth=np.arange(0, 361, 1)):
+    def group_velocities(self, inclination, azimuth=None):
         """
         Calculate the group velocities for the 6x6 elasticity matrix C along
         the direction (ψ, θ), in degrees, and return P-wave velocity Vp, and
@@ -202,6 +231,8 @@ class Material:
         # Run tests to see if the angles are scalars or lists
         if np.isscalar(azimuth):
             azimuth = [azimuth]
+        elif azimuth is None:
+            azimuth = np.arange(0, 361, 1)
         if np.isscalar(inclination):
             inclination = np.ones(len(azimuth))*inclination
         if len(azimuth) != len(inclination):
@@ -249,12 +280,194 @@ class Material:
 
         return gvp, gvs1, gvs2
 
-    def rotate(self, alpha, beta, gamma, order=[1, 2, 3], mode="extrinsic"):
-        """Helper function to perform an arbitrary 3-D rotation of C."""
+    def rotate(self, alpha, beta, gamma, order=[1, 2, 3], mode="extrinsic", copy=False):
+        """
+        Arbitrary 3-D rotation of C.
+
+        Parameters
+        ----------
+        alpha : float
+            The yaw of the rotation (i.e. azimuth).
+        beta : float
+            The pitch of the rotation (i.e. the inclination)
+        gamma : float
+            The roll of the rotation (i.e. the wibbly wobbly side to sidey)
+        order : list of int
+            Defines the order of rotation. Important, since rotations are not
+            generally commutative.
+        mode : {"instrinsic", "extrinsic"}
+            Form of rotation.
+        copy: (bool)
+            Return a copy of the rotated tensor, leave self unchanged
+        """
+
         R = self._rotate_3d(alpha, beta, gamma, order, mode)
         Q = self._build_bond_matrix(R)
+        C = np.dot(Q, np.dot(self.C, Q.T))
 
-        return np.dot(Q, np.dot(self.C, Q.T))
+        if copy:
+            return Material(C, self.rho, self.id)
+
+        self.C = C
+        return self
+
+    def plot_velocity(
+        self,
+        which="vp",
+        incs=None,
+        azis=None,
+        incr=(None, None),
+        minmax=True,
+        proj="angle",
+        cmap="inferno_r",
+        norm=None,
+        ax=None,
+        fig_kw={"figsize": (3, 3), "constrained_layout": True},
+    ):
+        """
+        Plot seismic velocity on stereonet
+
+        Parameters
+        ----------
+        which : str
+            Which velocity to plot: vp, vs1, vs2, vpvs1, or vpvs2.
+        incs : list
+            Limited inclinations (degree from x1-x2-plane to x3) to plot.
+        azis : list
+            Limited azimuths (degree up from x1 to x2) to plot.
+        incr : 2*tuple
+            Increments in inclination and azimuth.
+        minmax : bool
+            Show minimum / maximum values in plot.
+        proj : {"angle", "area"}
+            Choose equal-angle or equal-area projection.
+        cmap : str
+            Color map to use to draw colors.
+        norm : `matplotlib.Normalize` object
+            Supply custom norm for color range.
+        ax : `matpltlib.Axes` object
+            Draw axis in external figure.
+        fig_kw : dict
+            Keyword args passed to created figure (ignored when ax is used).
+
+        """
+
+        import mplstereonet as ms
+        from matplotlib.colors import Normalize
+        from matplotlib.cm import ScalarMappable
+
+        def _xys(mr, ir, maz, iaz):
+            """
+            Return recatangle corners from midpoint (m) and increment (i) in radial
+            (r) and azimuthal (az) direction
+            """
+            x1 = maz - iaz / 2
+            x2 = maz + iaz / 2
+            y1 = mr - ir / 2
+            y2 = mr + ir / 2
+            xs = [x1, x1, x2, x2]
+            ys = [y1, y2, y2, y1]
+            return xs, ys
+
+        def _inc(arr):
+            """Smallest increment within array"""
+            try:
+                ad = abs(np.diff(arr))
+                return min(ad[ad > 0])
+            except ValueError:
+                print("Could not determine increment of fixed point spacing")
+                return 0
+
+        _label = {
+            "vp": "$V_P$ (km/s)",
+            "vs1": "$V_{{{S1}}}$ (km/s)",
+            "vs2": "$V_{{{S2}}}$ (km/s)",
+            "vpvs1": "$V_P/V_{{{S1}}}$",
+            "vpvs2": "$V_P/V_{{{S2}}}$",
+        }
+
+        _proj = {"area": "equal_area_stereonet", "angle": "equal_angle_stereonet"}
+
+        docont = False
+        if incs is None or azis is None:
+            incs, azis = utils.sample_sphere(500)
+
+            # Circumfer for nicer triangulation
+            azis = np.append(azis, np.linspace(0, 360, 60))
+            incs = np.append(incs, np.zeros(60))
+            docont = True
+        else:
+            incs = np.array(incs)
+            azis = np.array(azis)
+
+        lons, lats = ms.line(incs, azis)
+
+        vp, vs1, vs2, _, _ = self.phase_velocities(incs, azis)
+
+        if which == "vp":
+            dats = vp
+        elif which == "vs1":
+            dats = vs1
+        elif which == "vs2":
+            dats = vs2
+        elif which == "vpvs1":
+            dats = np.divide(vp, vs1)
+        elif which == "vpvs2":
+            dats = np.divide(vp, vs2)
+        else:
+            msg = f"Unknown 'which': {which}"
+            raise ValueError(msg)
+
+        imin = np.argmin(dats)
+        imax = np.argmax(dats)
+
+        # Get the colors right
+        if not norm:
+            norm = Normalize(vmin=min(dats), vmax=max(dats))
+        mapper = ScalarMappable(norm=norm, cmap=cmap)
+
+        # Do the plot
+        if ax:
+            # Make sure it's a stereonet
+            fig = ax.get_figure()
+            spec = ax.get_subplotspec()
+            ax.set_axis_off()
+            del ax
+            ax = fig.add_subplot(spec, projection=_proj[proj])
+        else:
+            fig, ax = ms.subplots(1, 1, **fig_kw, projection=_proj[proj])
+
+        ax.set_azimuth_ticks([])
+
+        if docont:
+            # contour the half sphere
+            ax.tricontourf(lons, lats, dats, norm=norm, cmap=cmap, linestyles="solid")
+        else:
+            # fill only sampled segments
+            # find angle increments
+            dinc = incr[0]
+            if not dinc:
+                dinc = _inc(incs)
+            daz = incr[1]
+            if not daz:
+                daz = _inc(azis)
+
+            for inc, az, dat in zip(incs, azis, dats):
+                xs, ys = _xys(inc, dinc, az, daz)
+                lon, lat = ms.line(ys, xs)
+                ax.fill(lon, lat, color=mapper.cmap(norm(dat)))
+
+        # Write out minimum and maximum
+        if minmax:
+            ax.plot(lons[imin], lats[imin], "o", mec="black", mfc="none")
+            ax.plot(lons[imax], lats[imax], "x", mec="white", mfc="none")
+
+        cb = fig.colorbar(mapper, ax=ax, orientation="horizontal", label=_label[which])
+        ticks = [dats[imin], dats[imin] + (dats[imax] - dats[imin])/2, dats[imax]]
+        cb.set_ticks(ticks)
+        cb.set_ticklabels(["{:.1f}".format(t) for t in ticks])
+
+        return fig, ax
 
     def _rotate_3d(self, alpha, beta, gamma, order=[1, 2, 3], mode="extrinsic"):
         """
@@ -272,7 +485,7 @@ class Material:
         order : list of int
             Defines the order of rotation. Important, since rotations are not
             generally commutative.
-        mode : {"instrinsic", "extrinsic"}
+        mode : {"int", "intrinsic", "ext", "extrinsic"}
             Form of rotation.
 
         Returns
@@ -281,11 +494,16 @@ class Material:
             Composite rotation matrix.
 
         """
+        _int = ["int", "intrinsic"]
+        _ext = ["ext", "extrinsic"]
 
-        if mode == "intrinsic":
+        if mode in _int:
             r_z, r_y, r_x = np.deg2rad([alpha, beta, gamma])
-        elif mode == "extrinsic":
+        elif mode in _ext:
             r_z, r_y, r_x = np.deg2rad([gamma, beta, alpha])
+        else:
+            msg = "Unknown mode, must be one of: " + ", ".join(_int + _ext)
+            raise ValueError(msg)
 
         R_z = np.array([[ np.cos(r_z),  np.sin(r_z), 0],
                         [-np.sin(r_z),  np.cos(r_z), 0],
@@ -306,13 +524,16 @@ class Material:
         
     def _build_bond_matrix(self, R):
         """Construct Bond-like 6x6 representation of a 3x3 rotation matrix."""
+        r00, r01, r02 = R[0, :]
+        r10, r11, r12 = R[1, :]
+        r20, r21, r22 = R[2, :]
         return np.array(
-            [[    R[0,0]**2,     R[0,1]**2,     R[0,2]**2,             2*R[0,1]*R[0,2],             2*R[0,0]*R[0,2],             2*R[0,0]*R[0,1]],
-             [    R[1,0]**2,     R[1,1]**2,     R[1,2]**2,             2*R[1,1]*R[1,2],             2*R[1,0]*R[1,2],             2*R[1,0]*R[1,1]],
-             [    R[2,0]**2,     R[2,1]**2,     R[2,2]**2,             2*R[2,1]*R[2,2],             2*R[2,0]*R[2,2],             2*R[2,0]*R[2,1]],
-             [R[1,0]*R[2,0], R[1,1]*R[2,1], R[1,2]*R[2,2], R[1,1]*R[2,2]+R[1,2]*R[2,1], R[1,0]*R[2,2]+R[1,2]*R[2,0], R[1,0]*R[2,1]+R[1,1]*R[2,0]],
-             [R[0,0]*R[2,0], R[0,1]*R[2,1], R[0,2]*R[2,2], R[0,1]*R[2,2]+R[0,2]*R[2,1], R[0,0]*R[2,2]+R[0,2]*R[2,0], R[0,0]*R[2,1]+R[0,1]*R[2,0]],
-             [R[0,0]*R[1,0], R[0,1]*R[1,1], R[0,2]*R[1,2], R[0,1]*R[1,2]+R[0,2]*R[1,1], R[0,0]*R[1,2]+R[0,2]*R[1,0], R[0,0]*R[1,1]+R[0,1]*R[1,0]]])
+            [[ r00**2,  r01**2,  r02**2,       2*r01*r02,       2*r00*r02,       2*r00*r01],
+             [ r10**2,  r11**2,  r12**2,       2*r11*r12,       2*r10*r12,       2*r10*r11],
+             [ r20**2,  r21**2,  r22**2,       2*r21*r22,       2*r20*r22,       2*r20*r21],
+             [r10*r20, r11*r21, r12*r22, r11*r22+r12*r21, r10*r22+r12*r20, r10*r21+r11*r20],
+             [r00*r20, r01*r21, r02*r22, r01*r22+r02*r21, r00*r22+r02*r20, r00*r21+r01*r20],
+             [r00*r10, r01*r11, r02*r12, r01*r12+r02*r11, r00*r12+r02*r10, r00*r11+r01*r10]])
 
     def _christoffel(self, x):
         """
@@ -372,7 +593,11 @@ class Material:
 
         rotated_vec = utils.rotate2xy(plane.copy(), azimuth, inclination)
 
-        φ = np.rad2deg(np.arctan2(rotated_vec[1], rotated_vec[2]))
+        try:
+            φ = np.rad2deg(np.arctan2(rotated_vec[1], rotated_vec[2]))
+        except TypeError:
+            # rotated_vec may be complex for isotropic media
+            φ = np.nan
         φ = φ + 180 if φ < -90 else φ
         φ = φ - 180 if φ > 90 else φ
 
@@ -381,12 +606,42 @@ class Material:
     @property
     def is_isotropic(self):
         """Tests whether the material is isotropic. Returns a boolean."""
-        # TO BE IMPLEMENTED
-        return True
+        C = self.C
+        # Build predicates
+        pred1 = bool(C[0, 1] == C[0, 2] == C[1, 2])
+        pred2 = bool(C[3, 3] == C[4, 4] == C[5, 5])
+        pred3 = bool(C[0, 0] == C[1, 1] == C[2, 2] == C[0, 1] + 2*C[3, 3])
+
+        return bool((pred1 and pred2 and pred3))
+
+    @property
+    def isotropic(self):
+        """Returns the isotropic component of elastic material."""
+        return Material(decompose_C(self)["isotropic"], self.rho)
+
+    @property
+    def hexagonal(self):
+        """Returns the hexagonal component of elastic material."""
+        return Material(decompose_C(self)["hexagonal"], self.rho)
+
+    @property
+    def tetragonal(self):
+        """Returns the tetragonal component of elastic material."""
+        return Material(decompose_C(self)["tetragonal"], self.rho)
+
+    @property
+    def orthorhombic(self):
+        """Returns the orthorombic component of elastic material."""
+        return Material(decompose_C(self)["orthorhombic"], self.rho)
+
+    @property
+    def monoclinic(self):
+        """Returns the monoclinic component of elastic material."""
+        return Material(decompose_C(self)["monoclinic"], self.rho)
 
     @property
     def lame_coefficients(self):
-        """Returns the Lame coefficients for the material."""
+        """Returns the Lamé coefficients for the material."""
         # Material must be isotropic for these to be meaningful!
         if not self.is_isotropic:
             raise ValueError
@@ -398,12 +653,56 @@ class Material:
     @property
     def bulk_modulus(self):
         """Returns the bulk modulus for the material."""
-        # Material must be isotropic for this to be meaningful!
-        if not self.is_isotropic:
-            raise ValueError
-        la, mu = self.lame_coefficients
+        # If the material is isotropic, simply use the Lamé coefficients
+        if self.is_isotropic:
+            la, mu = self.lame_coefficients
+            return la + 2*mu/3
 
-        return la + 2*mu/3
+        # Calculate Voigt's bulk modulus
+        C = self.C.copy()
+        K_voigt = (C[0, 0] + C[1, 1] + C[2, 2]
+                   + 2*(C[0, 1] + C[0, 2] + C[1, 2])) / 9
+
+        # Calculate Reuss' bulk modulus
+        S = np.linalg.inv(C)
+        K_reuss = 1 / (S[0, 0] + S[1, 1] + S[2, 2]
+                       + 2*(S[0, 1] + S[0, 2] + S[1, 2]))
+
+        return (K_voigt + K_reuss) / 2
+
+    @property
+    def shear_modulus(self):
+        """Returns the shear modulus for the material."""
+        # If the material is isotropic, simply use the Lamé coefficients
+        if self.is_isotropic:
+            _, mu = self.lame_coefficients
+            return mu
+
+        # Calculate Voigt's shear modulus
+        C = self.C.copy()
+        G_voigt = (C[0, 0] + C[1, 1] + C[2, 2]
+                   - (C[0, 1] + C[1, 2] + C[0, 2])
+                   + 3*(C[3, 3] + C[4, 4] + C[5, 5])) / 15
+
+        # Calculate Reuss' shear modulus
+        S = np.linalg.inv(C)
+        G_reuss = 15 / (4*(S[0, 0] + S[1, 1] + S[2, 2])
+                        - 4*(S[0, 1] + S[0, 2] + S[1, 2])
+                        + 3*(S[3, 3] + S[4, 4] + S[5, 5]))
+
+        return (G_voigt + G_reuss) / 2
+
+    @property
+    def C_tensor(self):
+        """Returns the elastic stiffness tensor in full 4th rank tensor form."""
+        tensor = np.zeros((3, 3, 3, 3), dtype=float)
+        for i, j, k, l in itertools.product(range(3), repeat=4):
+            m = self._VOIGT_CONTRACTION_MATRIX[i, j]
+            n = self._VOIGT_CONTRACTION_MATRIX[k, l]
+            tensor[i, j, k, l] = self.C[m, n]
+
+        return tensor
+
 
 def voigt_average(stiffness_tensors, volume_fractions):
     """
@@ -437,12 +736,14 @@ def voigt_average(stiffness_tensors, volume_fractions):
     """
 
     # Validate volume fraction sums to unity
-    if np.sum(volume_fractions) != 1:
-        raise ValueError("Volume fractions must sum to unity!")
+    sumfrac = np.sum(volume_fractions)
+    if sumfrac != 1:
+        volume_fractions = np.divide(volume_fractions, sumfrac)
 
-    return np.add(*[C*volume_fraction
-                    for C, volume_fraction
-                    in zip(stiffness_tensors, volume_fractions)])
+    return np.sum([C*volume_fraction
+                   for C, volume_fraction
+                   in zip(stiffness_tensors, volume_fractions)],
+                  axis=0)
 
 
 def reuss_average(stiffness_tensors, volume_fractions):
@@ -479,12 +780,14 @@ def reuss_average(stiffness_tensors, volume_fractions):
     """
 
     # Validate volume fraction sums to unity
-    if np.sum(volume_fractions) != 1:
-        raise ValueError("Volume fractions must sum to unity!")
+    sumfrac = np.sum(volume_fractions)
+    if sumfrac != 1:
+        volume_fractions = np.divide(volume_fractions, sumfrac)
 
-    C_r = np.add(*[np.linalg.inv(C)*volume_fraction
-                   for C, volume_fraction
-                   in zip(stiffness_tensors, volume_fractions)])
+    C_r = np.sum([np.linalg.inv(C)*volume_fraction
+                  for C, volume_fraction
+                  in zip(stiffness_tensors, volume_fractions)],
+                 axis=0)
 
     return np.linalg.inv(C_r)
 
@@ -527,8 +830,13 @@ def voigt_reuss_hill_average(materials, volume_fractions):
     """
 
     # Validate volume fraction sums to unity
-    if np.sum(volume_fractions) != 1:
-        raise ValueError("Volume fractions must sum to unity!")
+    sumfrac = np.sum(volume_fractions)
+    if sumfrac != 1:
+        volume_fractions = np.divide(volume_fractions, sumfrac)
+        warnings.warn(
+            "Volume fractions did not sum to unity - re-normalising."
+            "\nDouble-check your chosen volume fractions are correct."
+        )
 
     C_v = voigt_average([material.C for material in materials],
                          volume_fractions)
@@ -575,14 +883,18 @@ def isotropic_C(vp=None, vs=None, rho=None, la=None, mu=None, K=None, G=None):
 
     C = np.zeros((6, 6))
 
+    if rho is None:
+        if vp is not None:
+            rho = _vp2rho(vp)
+            # Emit a warning here
+        else:
+            raise errors.MissingDensityValue
+
     if vp is not None and vs is not None:
         C[0, 0] = vp**2
         C[3, 3] = vs**2
-        C[0, 1] = C[0, 0] - 2*C[3, 3]
-        if rho is not None:
-            C *= rho
-        else:
-            C *= _vp2rho(vp)
+        C[0, 1] = vp**2 - 2*vs**2
+        C *= rho
     elif la is not None and mu is not None:
         C[0, 0] = la + 2*mu
         C[3, 3] = mu
@@ -590,16 +902,237 @@ def isotropic_C(vp=None, vs=None, rho=None, la=None, mu=None, K=None, G=None):
     elif K is not None and G is not None:
         C[0, 0] = K + 4*G/3
         C[3, 3] = G
-        C[0, 1] = C[0, 0] - 2*C[3, 3]
+        C[0, 1] = K - 2*G/3
     else:
-        print("No arguments provided.")
+        raise errors.InsufficientElasticInformation
 
     C[1, 1] = C[2, 2] = C[0, 0]
     C[4, 4] = C[5, 5] = C[3, 3]
     C[1, 0] = C[0, 2] = C[2, 0] = C[1, 2] = C[2, 1] = C[0, 1]
 
-    return C
+    return Material(C, rho, material_id="isotropic material")
 
+
+def hexagonal1_C(vp, vs, ani, rho):
+    """
+    Voigt's representation of simplified 1-parameter hexagonal symmetry, with anisotropy:
+
+    ani = (V∥ - V⊥) / V · 100%
+
+    where V∥ and V⊥ are the seismic velocities parallel and perpendicular to the
+    symmetry axis and V is the average seismic velocity. P- and S-wave
+    anisotropy are equal and pure elliptical (Levin and Park, 1997, GJI). The
+    anisotropy axis is parallel to x1.
+
+    Parameters
+    ----------
+    vp : float
+        Isotropic P wave velocity. Units of km/s.
+    vs : float
+        Isotropic S wave velocity. Units of km/s.
+    ani : float
+        anisotropy% = (V∥ - V⊥) / V · 100%
+    rho : float
+        Bulk density of material. Units of g/cm^3
+
+    Returns
+    -------
+    C : 6x6 array of floats
+        Isotropic elastic stiffness tensor in Voigt matrix form.
+
+    """
+
+    C = np.zeros((6, 6))
+
+    da = vp * ani / 100.0
+    db = vs * ani / 100.0
+    AA = rho * (vp - da / 2.0) ** 2.0
+    CC = rho * (vp + da / 2.0) ** 2.0
+    LL = rho * (vs + db / 2.0) ** 2.0
+    NN = rho * (vs - db / 2.0) ** 2.0
+    AC = rho * vp**2
+    FF = -LL + np.sqrt(
+        (2.0 * AC) ** 2 - 2.0 * AC * (AA + CC + 2.0 * LL) + (AA + LL) * (CC + LL)
+    )
+
+    C[2, 2] = AA
+    C[1, 1] = AA
+    C[0, 0] = CC
+
+    C[2, 1] = AA - 2 * NN
+    C[1, 2] = AA - 2 * NN
+
+    C[2, 0] = FF
+    C[0, 2] = FF
+    C[1, 0] = FF
+    C[0, 1] = FF
+
+    C[5, 5] = LL
+    C[4, 4] = LL
+    C[3, 3] = NN
+
+    return Material(C, rho, material_id="hexagonal material")
+
+
+def decompose_C(material, symmetry="all"):
+    """
+    Decomposes an elastic tensor after the formulation set out in Browaeys and
+    Chevrot, 2004. They propose a decomposition of the elastic tensor by
+    representing it as triclinic elastic vector, X, before transforming it via
+    a cascade of projections into a sum of vectors belonging to the different
+    symmetry classes.
+
+    Parameters
+    ----------
+    material : `anisotropy.materials.Material` object
+        Material to decompose into elastic tensors representing each symmetry
+        class.
+    symmetry : str, optional
+        Specify which component to return - default is to return a dictionary
+        containing all decompositions.
+
+    Returns
+    -------
+    decomposed_elements : dict
+        Dictionary containing constitutive symmetry components as key, value
+        pairs.
+
+    """
+
+    C = material.C.copy()
+
+    decomposed_elements = {
+        "isotropic": None,
+        "hexagonal": None,
+        "tetragonal": None,
+        "orthorhombic": None,
+        "monoclinic": None
+    }
+    for symmetry_class in decomposed_elements.keys():
+        X = _C_tensor2vector(C)
+        M = _projectors(symmetry_class)
+        X_sc = np.dot(M, X)
+        C_sc = _C_vector2tensor(X_sc)
+        decomposed_elements[symmetry_class] = C_sc
+        C -= C_sc
+
+    return decomposed_elements
+
+
+def _projectors(symmetry_class):
+    """
+    Utility function for serving the required projection matrices for each
+    symmetry class
+
+    Parameters
+    ----------
+    symmetry_class : str
+        Name of symmetry class required.
+
+    Returns
+    -------
+    M : array-like of float, shape(21, 21)
+
+    """
+
+    rt2 = np.sqrt(2)
+    M = np.zeros((21, 21))
+
+    if symmetry_class == "isotropic":
+        M[0:3, 0:3] = 3/15
+        M[0:3, 3:6] = rt2/15
+        M[0:3, 6:9] = 2/15
+
+        M[3:6, 0:3] = rt2/15
+        M[3:6, 3:6] = 4/15
+        M[3:6, 6:9] = -rt2/15
+
+        M[6:9, 0:3] = 2/15
+        M[6:9, 3:6] = -rt2/15
+        M[6:9, 6:9] = 1/5
+
+    if symmetry_class == "hexagonal":
+        M[0:2, 0:2] = 3/8
+        M[0:2, 5] = M[5, 0:2] = 1/(4*rt2)
+        M[0:2, 8] = M[8, 0:2] = 1/4
+        M[2, 2] = 1.
+        M[3:5, 3:5] = M[6:8, 6:8] = M[8, 8] = 1/2
+        M[5, 5] = 3/4
+        M[5, 8] = M[8, 5] = -1/(2*rt2)
+
+    if symmetry_class == "tetragonal":
+        M[2, 2] = M[5, 5] = M[8, 8] = 1.
+        M[0:2, 0:2] = M[3:5, 3:5] = M[6:8, 6:8] = 1/2
+
+    if symmetry_class == "orthorhombic":
+        np.fill_diagonal(M, 1)
+        M[9:, 9:] = 0
+
+    if symmetry_class == "monoclinic":
+        np.fill_diagonal(M, 1)
+        M[:, 10:12] = M[:, 13:15] = M[:, 16:18] = M[:, 19:21] = 0
+
+    return M
+
+def _C_tensor2vector(C):
+    """
+    Convert an elastic tensor, C, to an elastic vector, X, as set out in
+    Equation 2.2 of Browaeys and Chevrot, 2004.
+
+    Parameters
+    ----------
+    C : array-like of float, shape(6, 6)
+        Elastic tensor for the material, in GPa, to be converted.
+
+    Returns
+    -------
+    X : array-like of float, shape(21)
+        Elastic vector representation of the elastic tensor, C, in GPa.
+
+    """
+
+    rt2 = np.sqrt(2)
+    X = np.zeros(21)
+    X[0:3] = C[0, 0], C[1, 1], C[2, 2]
+    X[3:6] = rt2*C[1, 2], rt2*C[0, 2], rt2*C[0, 1]
+    X[6:9] = 2*C[3, 3], 2*C[4, 4], 2*C[5, 5]
+    X[9:12] = 2*C[0, 3], 2*C[1, 4], 2*C[2, 5]
+    X[12:15] = 2*C[2, 3], 2*C[0, 4], 2*C[1, 5]
+    X[15:18] = 2*C[1, 3], 2*C[2, 4], 2*C[0, 5]
+    X[18:21] = 2*rt2*C[4, 5], 2*rt2*C[3, 5], 2*rt2*C[3, 4]
+
+    return X
+
+
+def _C_vector2tensor(X):
+    """
+    Convert an elastic vector, X, to an elastic vector, C, as set out in
+    Equation 2.2 of Browaeys and Chevrot, 2004.
+
+    Parameters
+    ----------
+    X : array-like of float, shape(21)
+        Elastic vector representation of the elastic tensor, C, in GPa.
+
+    Returns
+    -------
+    C : array-like of float, shape(6, 6)
+        Elastic tensor for the material, in GPa, to be converted.
+
+    """
+
+    rt2 = np.sqrt(2)
+    rt22 = rt2*2
+    C = np.array([
+        [    X[0], X[5]/rt2, X[4]/rt2,     X[9]/2,    X[13]/2,    X[17]/2],
+        [X[5]/rt2,     X[1], X[3]/rt2,    X[15]/2,    X[10]/2,    X[14]/2],
+        [X[4]/rt2, X[3]/rt2,     X[2],    X[12]/2,    X[16]/2,    X[11]/2],
+        [  X[9]/2,  X[15]/2,  X[12]/2,     X[6]/2, X[20]/rt22, X[19]/rt22],
+        [ X[13]/2,  X[10]/2,  X[16]/2, X[20]/rt22,     X[7]/2, X[18]/rt22],
+        [ X[17]/2,  X[14]/2,  X[11]/2, X[19]/rt22, X[18]/rt22,     X[8]/2]
+    ])
+
+    return C
 
 def _vp2rho(vp):
     """

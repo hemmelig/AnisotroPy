@@ -10,6 +10,32 @@ Module that supplies custom exceptions for the AnisotroPy package.
 
 """
 
+class MissingDensityValue(Exception):
+    """
+    Custom exception to handle case when the user requests an isotropic material
+    without providing a density value.
+
+    """
+
+    def __init__(self):
+        msg = "Must provide a density when constructing an isotropic material."
+        super().__init__(msg)
+
+
+class InsufficientElasticInformation(Exception):
+    """
+    Custom exception to handle case when the user attempts to build an isotropic
+    material without provide sufficient elastic moduli. These can be in the form
+    of the Lame coefficients, lambda and mu, the isotropic body wave velocities,
+    vp and vs, or the elastic bulk and shear moduli, K and G.
+
+    """
+
+    def __init__(self):
+        msg = "Insufficient elastic information - consult the documentation!"
+        super().__init__(msg)
+
+
 class InvalidMaterialID(Exception):
     """
     Custom exception to handle case when the user requests the elastic
@@ -17,6 +43,6 @@ class InvalidMaterialID(Exception):
 
     """
 
-    def __init__(self):
-        msg = ("InvalidMaterialID: material  with this ID not in database.")
+    def __init__(self, material_id):
+        msg = f"Material with ID {material_id} not in database."
         super().__init__(msg)

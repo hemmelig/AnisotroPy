@@ -9,6 +9,8 @@
 
 """
 
+__all__ = ["effective_modelling", "materials", "utils"]
+
 name = "anisotropy"
 __version__ = "0.0.1"
 __description__ = """AnisotroPy - a Python toolkit for the study of seismic
