@@ -1,18 +1,24 @@
 <p align="center">
   <!-- DOI -->
-  [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5931586.svg)](https://doi.org/10.5281/zenodo.5931586)
+  <a href="https://doi.org/10.5281/zenodo.5931586">
+    <img src="https://zenodo.org/badge/DOI/10.5281/zenodo.5931586.svg" />
+  </a>
   <!-- ReadTheDocs -->
-  [![Documentation Status](https://readthedocs.org/projects/seismicanisotropy/badge/?version=latest)](https://seismicanisotropy.readthedocs.io/en/latest/?badge=latest)
+  <a href="https://seismicanisotropy.readthedocs.io/en/latest">
+    <img src="https://readthedocs.org/projects/seismicanisotropy/badge/?version=latest" />
+  </a>
   <!-- License -->
-  [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+  <a href="https://www.gnu.org/licenses/gpl-3.0">
+    <img src="https://img.shields.io/badge/License-GPLv3-blue.svg" />
+  </a>
 </p>
 
 <p align="center">
-  [AnisotroPy](https://seismicanisotropy.readthedocs.io/en/latest/index.html) is a cross-platform Python package for the study of [seismic anisotropy](https://en.wikipedia.org/wiki/Seismic_anisotropy).
+  <a href="https://seismicanisotropy.readthedocs.io/en/latest/index.html">AnisotroPy</a> is a cross-platform Python package for the study of <a href="https://en.wikipedia.org/wiki/Seismic_anisotropy">seismic anisotropy</a>.
 </p>
 
 <p align="center">
-  <img src="https://github.com/hemmelig/AnisotroPy/docs/img/AnilogoBig.png" width="80%">
+  <img src="https://raw.githubusercontent.com/hemmelig/AnisotroPy/main/docs/img/AnilogoBig.png" width="80%" />
 </p>
 
 Key features
