@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
 """
-Modelling of the effective seismic anisotropy of a system of N arbitrarily
-anisotropic layers, based either on the analytical system of equations outlined
-by Silver and Savage (1994) or by directly applying a sequence of splitting
-operators to the first-derivative of a Gaussian wavelet.
+Modelling of the effective seismic anisotropy of a system of N arbitrarily anisotropic
+layers, based either on the analytical system of equations outlined by Silver and Savage
+(1994) or by directly applying a sequence of splitting operators to the first-derivative
+of a Gaussian wavelet.
 
 For more information, please read:
 
-    Silver, P.G. and Savage, M.K., 1994. The interpretation of shear-wave
-    splitting parameters in the presence of two anisotropic layers. Geophysical
-    Journal International, 119(3), pp.949-963.
+    Silver, P.G. and Savage, M.K., 1994. The interpretation of shear-wave splitting
+    parameters in the presence of two anisotropic layers. Geophysical Journal
+    International, 119(3), pp.949-963.
 
 If you use this code, please cite this article.
 
 :copyright:
-    2021--2022, AnisotroPy developers.
+    2023, AnisotroPy developers.
 :license:
     GNU General Public License, Version 3
     (https://www.gnu.org/licenses/gpl-3.0.html)
@@ -36,14 +36,14 @@ from anisotropy.materials import Material, voigt_reuss_hill_average
 class ElasticLayer:
     """
     Small class to encapsulate information that defines a layer composed of an
-    (an)isotropic material and provide a simple interface to a suite of useful
-    functions to query its properties.
+    (an)isotropic material and provide a simple interface to a suite of useful functions
+    to query its properties.
 
     Attributes
     ----------
     material : `anisotropy.Material` object
-        (An)isotropic material, whose elastic properties are fully described by
-        its stiffness tensor and density.
+        (An)isotropic material, whose elastic properties are fully described by its
+        stiffness tensor and density.
     thickness : float
         Thickness of the elastic layer, in km.
     ψ_a : float
@@ -62,12 +62,12 @@ class ElasticLayer:
     effective_dt
         Calculate the effective delay time for a ray passing through the layer.
     effective_fast
-        Calculate the effective fast orientation direction for a ray passing
-        through the layer.
+        Calculate the effective fast orientation direction for a ray passing through the
+        layer.
 
     """
 
-    def __init__(self, material, thickness, ψ_a, dip=0., fractional_alignment=0.3):
+    def __init__(self, material, thickness, ψ_a, dip=0.0, fractional_alignment=0.3):
         """Instantiate the Layer object."""
 
         self.thickness = thickness
@@ -100,7 +100,7 @@ class ElasticLayer:
 
         dip, azimuth = np.deg2rad(self.dip), np.deg2rad(azimuth)
 
-        apparent_dip = np.rad2deg(np.arctan(-np.tan(dip)*np.cos(azimuth)))
+        apparent_dip = np.rad2deg(np.arctan(-np.tan(dip) * np.cos(azimuth)))
 
         γ = np.deg2rad(90 - apparent_dip - angle_of_incidence)
         β = np.deg2rad(90 + apparent_dip)
@@ -133,8 +133,9 @@ class ElasticLayer:
         distance_in_layer = self.traversal_distance(angle_of_incidence, azimuth)
         phase_velocities = self.material.phase_velocities(inclination, azimuth)
 
-        return distance_in_layer*(1/np.array(phase_velocities[2])
-                                  - 1/np.array(phase_velocities[1]))
+        return distance_in_layer * (
+            1 / np.array(phase_velocities[2]) - 1 / np.array(phase_velocities[1])
+        )
 
     def effective_fast(self, angle_of_incidence, azimuth=np.arange(0, 361, 1)):
         """
@@ -176,7 +177,8 @@ class ElasticLayer:
 
         C_vrh, rho_vrh, *_ = voigt_reuss_hill_average(
             [iso_olivine, value],
-            [1-self.fractional_alignment, self.fractional_alignment])
+            [1 - self.fractional_alignment, self.fractional_alignment],
+        )
 
         self._material = Material(C_vrh, rho_vrh)
 
@@ -220,14 +222,20 @@ def fit_2layer_model(observations, material, angle_of_incidence):
     for T1 in T1s:
         for a1 in a1s:
             print(f"   ...Layer 1 - thickness = {T1} km, ψ_a = {a1}...")
-            layer1 = ElasticLayer(material, thickness=T1, ψ_a=a1, fractional_alignment=0.3888)
+            layer1 = ElasticLayer(
+                material, thickness=T1, ψ_a=a1, fractional_alignment=0.3888
+            )
             for T2 in T2s:
                 for a2 in a2s:
                     print(f"      ...Layer 2 - thickness = {T2} km, ψ_a = {a2}...")
-                    layer2 = ElasticLayer(material, thickness=T2, ψ_a=a2, fractional_alignment=0.3888)
+                    layer2 = ElasticLayer(
+                        material, thickness=T2, ψ_a=a2, fractional_alignment=0.3888
+                    )
 
                     layers = [layer2, layer1]
-                    misfits.append(_calculate_misfit(observations, angle_of_incidence, layers))
+                    misfits.append(
+                        _calculate_misfit(observations, angle_of_incidence, layers)
+                    )
 
     return misfits
 
@@ -271,17 +279,17 @@ def _calculate_misfit(observations, layers, angle_of_incidence):
     φφ, δδt, dφφ, dδδt, backazimuths = observations
     Γφ, Γδt = [], []
     for φ, δt, dφ, dδt, backazimuth in zip(φφ, δδt, dφφ, dδδt, backazimuths):
-        azimuths = np.arange(backazimuth-5, backazimuth+6, 1)
+        azimuths = np.arange(backazimuth - 5, backazimuth + 6, 1)
         effective_results = model(0.125, layers, angle_of_incidence, azimuths)
         effective_φφ, effective_δδt = effective_results
 
-        Γφx = np.array([abs(φ - effective_φ) - dφ
-                        for effective_φ in effective_φφ])
+        Γφx = np.array([abs(φ - effective_φ) - dφ for effective_φ in effective_φφ])
         Γφx[Γφx < 0] = 0
         Γφ.append(min(Γφx))
 
-        Γδtx = np.array([abs(δt - effective_δt) - dδt
-                         for effective_δt in effective_δδt])
+        Γδtx = np.array(
+            [abs(δt - effective_δt) - dδt for effective_δt in effective_δδt]
+        )
         Γδtx[Γδtx < 0] = 0
         Γδt.append(min(Γδtx))
 
@@ -289,13 +297,14 @@ def _calculate_misfit(observations, layers, angle_of_incidence):
     rms_δt = np.sqrt(np.mean([Γδt_i**2 for Γδt_i in Γδt]))
     print(rms_φ, rms_δt)
 
-    M = rms_φ/np.std(φφ) + rms_δt/np.std(δδt)
+    M = rms_φ / np.std(φφ) + rms_δt / np.std(δδt)
 
     return M
 
 
-def model(frequency, angle_of_incidence, layers, azimuth=None,
-          method="silver_savage"):
+def model(
+    frequency, angle_of_incidence, layers, azimuth=None, method="silver_savage"
+):
     """
     Calculate the effective splitting of a ray passing through N arbitrarily
     anisotropic layers.
@@ -373,7 +382,7 @@ def _silver_savage_94(frequency, angle_of_incidence, layers, azimuth=None):
         φφ = [layer.effective_fast(angle_of_incidence, az) for layer in layers]
         δδt = [layer.effective_dt(angle_of_incidence, az) for layer in layers]
         φφ, δδt = _aggregate_layers(φφ, δδt)
-            
+
         # Drop any layers with δt=0
         zero_δt = np.where(δδt == 0)
         φφ, δδt = np.delete(φφ, zero_δt), np.delete(δδt, zero_δt)
@@ -384,21 +393,21 @@ def _silver_savage_94(frequency, angle_of_incidence, layers, azimuth=None):
         # Process
         ω = 2.0 * π * frequency
         θθ = (ω / 2) * δδt
-        αα = (2*π/180) * (φφ - az)
+        αα = (2 * π / 180) * (φφ - az)
 
         S = np.prod(np.cos(θθ))
         Cc = S * np.sum(np.tan(θθ) * np.cos(αα))
         Cs = S * np.sum(np.tan(θθ) * np.sin(αα))
 
         ap, ap_perp = 0, 0
-        for i in range(len(φφ)-1):
-            for j in range(i+1, len(φφ)):
-                ap += np.tan(θθ[i])*np.tan(θθ[j])*np.cos(αα[i] - αα[j])
-                ap_perp += np.tan(θθ[i])*np.tan(θθ[j])*np.sin(αα[i] - αα[j])
+        for i in range(len(φφ) - 1):
+            for j in range(i + 1, len(φφ)):
+                ap += np.tan(θθ[i]) * np.tan(θθ[j]) * np.cos(αα[i] - αα[j])
+                ap_perp += np.tan(θθ[i]) * np.tan(θθ[j]) * np.sin(αα[i] - αα[j])
         ap = S * (1 - ap)
         ap_perp *= S
-        αa = np.arctan((ap_perp**2 + Cs**2) / (ap_perp*ap + Cs*Cc))
-        θa = np.arctan(ap_perp / (Cs*np.cos(αa) - Cc*np.sin(αa)))
+        αa = np.arctan((ap_perp**2 + Cs**2) / (ap_perp * ap + Cs * Cc))
+        θa = np.arctan(ap_perp / (Cs * np.cos(αa) - Cc * np.sin(αa)))
 
         effective_φ = _unwind_angle(az + (αa * 90 / π))
         effective_δt = (2 / ω) * θa
@@ -414,7 +423,9 @@ def _silver_savage_94(frequency, angle_of_incidence, layers, azimuth=None):
     return effective_φφ, effective_δδt
 
 
-def _plot_effective_splitting(effective_φφ, effective_δδt, layers, angle_of_incidence, observations=None):
+def _plot_effective_splitting(
+    effective_φφ, effective_δδt, layers, angle_of_incidence, observations=None
+):
     """
     Plots the results of an N-layer model as a function of back-azimuth (source
     polarisation).
@@ -448,8 +459,14 @@ def _plot_effective_splitting(effective_φφ, effective_δδt, layers, angle_of_
         ax.plot(source_polarisations, effective_φφ_sequence, color="k", lw=1)
     for layer, c, label in zip(layers, ["#99d8c9", "#f768a1"], ["Upper", "Lower"]):
         fasts = layer.effective_fast(angle_of_incidence, source_polarisations)
-        ax.plot(source_polarisations, fasts, color=c, lw=1, linestyle="--",
-                label=f"{label} layer")
+        ax.plot(
+            source_polarisations,
+            fasts,
+            color=c,
+            lw=1,
+            linestyle="--",
+            label=f"{label} layer",
+        )
 
     # Beautify
     ax.set_xlim([0, 360])
@@ -464,12 +481,19 @@ def _plot_effective_splitting(effective_φφ, effective_δδt, layers, angle_of_
     ax.set_ylabel("Effective φ, °")
 
     ax = axes[1]
-    ax.plot(source_polarisations, effective_δδt, color="k", lw=1,
-            label="Effective model")
+    ax.plot(
+        source_polarisations, effective_δδt, color="k", lw=1, label="Effective model"
+    )
     for layer, c, label in zip(layers, ["#99d8c9", "#f768a1"], ["Upper", "Lower"]):
         δt = layer.effective_dt(angle_of_incidence, source_polarisations)
-        ax.plot(source_polarisations, δt, color=c, lw=1, linestyle="--",
-                label=f"{label} layer")
+        ax.plot(
+            source_polarisations,
+            δt,
+            color=c,
+            lw=1,
+            linestyle="--",
+            label=f"{label} layer",
+        )
     ax.legend(fontsize=14)
 
     # Beautify
@@ -485,10 +509,12 @@ def _plot_effective_splitting(effective_φφ, effective_δδt, layers, angle_of_
 
     # Add any observations
     if observations is not None:
-        axes[0].scatter(observations["Baz."], observations["PHI"], marker="s",
-                        s=25, color="k")
-        axes[1].scatter(observations["Baz."], observations["TLAG"], marker="d",
-                        s=25, color="k")
+        axes[0].scatter(
+            observations["Baz."], observations["PHI"], marker="s", s=25, color="k"
+        )
+        axes[1].scatter(
+            observations["Baz."], observations["TLAG"], marker="d", s=25, color="k"
+        )
 
 
 def _wrap_φφ(effective_φφ):
@@ -505,7 +531,7 @@ def _wrap_φφ(effective_φφ):
     -------
     sequences : list of lists of float
         Wrapped φ sequences ready for plotting.
-    
+
     """
 
     effective_φφ = np.concatenate([effective_φφ[:-1], effective_φφ])
@@ -529,7 +555,7 @@ def _wrap_φφ(effective_φφ):
 def _aggregate_layers(φφ, δδt, threshold=1):
     """
     Agglomerate splitting operators which are (near) parallel or perpendicular.
-    
+
     Parameters
     ----------
     φφ : list of floats
@@ -602,7 +628,7 @@ def _unwind_angle(angle):
     angle = np.copy(np.array([angle]))
 
     # Shift p/m 180 to 0
-    angle -= 180*np.fix(angle/180)
+    angle -= 180 * np.fix(angle / 180)
 
     # Bring within range -90 < angle < 90
     angle[np.where(angle <= -90)] += 180

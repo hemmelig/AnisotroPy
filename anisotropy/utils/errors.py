@@ -3,12 +3,13 @@
 Module that supplies custom exceptions for the AnisotroPy package.
 
 :copyright:
-    2021--2022, AnisotroPy developers.
+    2023, AnisotroPy developers.
 :license:
     GNU General Public License, Version 3
     (https://www.gnu.org/licenses/gpl-3.0.html)
 
 """
+
 
 class MissingDensityValue(Exception):
     """
@@ -18,8 +19,9 @@ class MissingDensityValue(Exception):
     """
 
     def __init__(self):
-        msg = "Must provide a density when constructing an isotropic material."
-        super().__init__(msg)
+        super().__init__(
+            "Must provide a density when constructing an isotropic material."
+        )
 
 
 class InsufficientElasticInformation(Exception):
@@ -32,8 +34,9 @@ class InsufficientElasticInformation(Exception):
     """
 
     def __init__(self):
-        msg = "Insufficient elastic information - consult the documentation!"
-        super().__init__(msg)
+        super().__init__(
+            "Insufficient elastic information - consult the documentation!"
+        )
 
 
 class InvalidMaterialID(Exception):
@@ -44,5 +47,4 @@ class InvalidMaterialID(Exception):
     """
 
     def __init__(self, material_id):
-        msg = f"Material with ID {material_id} not in database."
-        super().__init__(msg)
+        super().__init__(f"Material with ID {material_id} not in database.")
