@@ -62,7 +62,7 @@ AnisotroPy Developers (2022). AnisotroPy: v0.0.1 (v0.0.1). Zenodo. https://doi.o
 
 Contributing to AnisotroPy
 --------------------------
-Contributions to AnisotroPy are welcomed. The first stop should be to reach out, either directly or—preferably—via the GitHub Issues panel, to discuss the proposed changes. Next, simply for the AnisotroPy repository, make your changes/add your new contribution, then make a [pull request](https://help.github.com/articles/about-pull-requests/). All contributors to AnisotroPy will be listed as authors on the releases.
+Contributions to AnisotroPy are welcomed. The first stop should be to reach out, either directly or—preferably—via the GitHub Issues panel, to discuss the proposed changes. Next, simply fork the AnisotroPy repository, make your changes/add your new contribution, then make a [pull request](https://help.github.com/articles/about-pull-requests/). All contributors to AnisotroPy will be listed as authors on the releases.
 
 Bug reports, suggestions for new features and enhancements, and even links to projects that have made use of AnisotroPy are most welcome.
 
