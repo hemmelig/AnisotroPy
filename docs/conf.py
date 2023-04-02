@@ -13,16 +13,19 @@
 import os
 import glob
 import sys
+
+from importlib.metadata import version as _version
+
+
 sys.path.insert(0, os.path.abspath('..'))
-import sphinx_rtd_theme
 
 # -- Project information -----------------------------------------------------
-project = 'AnisotroPy'
-copyright = '2021--2022, AnisotroPy developers'
-author = 'AnisotroPy developers'
+project = "AnisotroPy"
+copyright = "2023, AnisotroPy developers"
+author = "AnisotroPy developers"
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.1'
+release = _version("anisotropy")
 
 # -- General configuration ---------------------------------------------------
 # Add any Sphinx extension module names here, as strings. They can be
@@ -48,14 +51,12 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
 
-html_logo = 'img/AnilogoBig.png'
-
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
+html_theme = "sphinx_rtd_theme"
 
 # generate automatically stubs
 autosummary_generate = glob.glob("submodules" + os.sep + "*.rst")
@@ -63,4 +64,5 @@ autosummary_generate = glob.glob("submodules" + os.sep + "*.rst")
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
+html_logo = 'img/AnilogoBig.png'
 html_static_path = []

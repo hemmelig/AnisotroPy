@@ -3,12 +3,6 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - ipython
-  - jupyter
   - matplotlib
+  - mplstereonet
   - numpy
-  - obspy
-  - pandas
-  - python ==3.8
-  - pyproj
-  - scipy

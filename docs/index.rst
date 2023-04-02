@@ -7,28 +7,43 @@
 AnisotroPy
 ==========
 
-:mod:`AnisotroPy` is a Python package that provides standard routines for a number of aspects of the study of seismic anisotropy, including: shear-wave splitting analysis, effective media modelling, multiple layer fitting, and the extraction of radial and azimuthal anisotropy from ambient noise results.
+:mod:`AnisotroPy` is a cross-platform Python package for the study of seismic anisotropy.
 
-The package has been built to provide an efficient pythonic implementation of a number of long-established methods that can be either incorporated into analysis scripts, or used with a high-level dashboard interface. Where possible, we have provided parsers for the outputs of a number of established packages for shear-wave splitting analysis. This is accomplished via the sibling project AnIO, which provides a standard, unified file format for shear-wave splitting analyses.
+The goal of AnisotroPy is to provide straightforward access to a suite of routines and utilities for the study of seismic anisotropy. The package is primarily designed for both scripting purposes, but also includes a number of easy-to-use command-line utilities. Currently, we support:
+
+- Effective media modelling
+- Anisotropic layer fitting to observations
+- Visualisation of shear-wave splitting measurements
+- Shear-wave splitting analysis
+
+A sibling project—|AnisotropIO|—provides a standardised file format for shear-wave splitting measurements, as well as a range of parsers for other existing codes. The aim here is to make such analyses reproducible and straightforward to ingest into, for example, meta-studies.
 
 The source code for the project is hosted on |github|.
 
 This package is written by the AnisotroPy developers, and is distributed under
-the GPLv3 License, Copyright AnisotroPy developers 2021--2022.
-
+the GPLv3 License, Copyright AnisotroPy developers 2023.
 
 .. |github| raw:: html
 
-    <a href="https://github.com/hemmelig/AnisotroPy" target="_blank">github</a>
+    <a href="https://github.com/hemmelig/AnisotroPy" target="_blank">GitHub</a>
+
+.. |AnisotropIO| raw:: html
+
+   <a href="https://github.com/hemmelig/AnisotropIO" target="_blank">AnisotropIO</a>
 
 Supported operating systems
 ---------------------------
-AnisotroPy was developed and tested on Ubuntu 20.04, with the intention of being "platform agnostic". As of January 2022, the package has been successfully built and run on:
+AnisotroPy was developed and tested on Ubuntu 20.04, with the intention of being "platform agnostic". As of April 2023, the package has been successfully built and run on:
 
-- Ubuntu 20.04
+- Ubuntu 20.04/22.04
+- macOS Monterey v12.5.1
 
 Citation
 --------
+If you use AnisotroPy in your work, please cite the following:
+
+AnisotroPy Developers (2022). AnisotroPy: v0.0.1 (v0.0.1). Zenodo. https://doi.org/10.5281/zenodo.5931586
+
 We hope at some future point to publish a short companion paper in the Journal of Open Source Software.
 
 Contact
@@ -39,7 +54,7 @@ Any comments/questions can be directed to:
 
 License
 -------
-This package is written and maintained by the AnisotroPy developers, Copyright AnisotroPy developers 2021--2022. It is distributed under the GPLv3 License. Please see the `LICENSE <https://www.gnu.org/licenses/gpl-3.0.html>`_ for a complete description of the rights and freedoms that this provides the user.
+AnisotroPy is **free** and **open-source**, distributed under the GPLv3 License. Please see the `LICENSE <https://www.gnu.org/licenses/gpl-3.0.html>`_ for a complete description of the rights and freedoms that this provides the user.
 
 Contents:
 ---------

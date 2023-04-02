@@ -1,4 +1,3 @@
 matplotlib
+mplstereonet
 numpy
-obspy
-pandas
