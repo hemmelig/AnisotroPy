@@ -3,7 +3,7 @@
 Module that supplies various utility functions and classes.
 
 :copyright:
-    2021--2022, AnisotroPy developers.
+    2023, AnisotroPy developers.
 :license:
     GNU General Public License, Version 3
     (https://www.gnu.org/licenses/gpl-3.0.html)
@@ -20,7 +20,7 @@ from itertools import tee
 import numpy as np
 
 
-log_spacer = "="*110
+log_spacer = "=" * 110
 
 
 def azinc2vec(ψ, θ):
@@ -43,7 +43,7 @@ def azinc2vec(ψ, θ):
 
     ψ, θ = np.deg2rad([ψ, θ])
 
-    return np.array([np.cos(ψ)*np.cos(θ), -np.sin(ψ)*np.cos(θ), np.sin(θ)])
+    return np.array([np.cos(ψ) * np.cos(θ), -np.sin(ψ) * np.cos(θ), np.sin(θ)])
 
 
 def rotate2xy(vector, azimuth, inclination):
@@ -66,12 +66,8 @@ def rotate2xy(vector, azimuth, inclination):
 
     ψ, θ = np.deg2rad([azimuth, inclination])
 
-    r1 = np.array([[ np.cos(ψ), np.sin(ψ), 0],
-                   [-np.sin(ψ), np.cos(ψ), 0],
-                   [         0,         0, 1]])
-    r2 = np.array([[np.cos(θ), 0, -np.sin(θ)],
-                   [        0, 1,          0],
-                   [np.sin(θ), 0,  np.cos(θ)]])
+    r1 = np.array([[np.cos(ψ), np.sin(ψ), 0], [-np.sin(ψ), np.cos(ψ), 0], [0, 0, 1]])
+    r2 = np.array([[np.cos(θ), 0, -np.sin(θ)], [0, 1, 0], [np.sin(θ), 0, np.cos(θ)]])
 
     return np.dot(np.dot(vector, r1), r2)
 
@@ -119,15 +115,14 @@ def logger(logstem, log, loglevel="info"):
         now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         logfile = logstem.parent / f"{logstem.name}_{now}"
         logfile.parent.mkdir(exist_ok=True, parents=True)
-        handlers = [logging.FileHandler(str(logfile.with_suffix(".log"))),
-                    logging.StreamHandler(sys.stdout)]
+        handlers = [
+            logging.FileHandler(str(logfile.with_suffix(".log"))),
+            logging.StreamHandler(sys.stdout),
+        ]
     else:
         handlers = [logging.StreamHandler(sys.stdout)]
 
-    logging.basicConfig(level=level,
-                        format="%(message)s",
-                        handlers=handlers)
-                        # format="%(asctime)s [%(levelname)s] %(message)s",
+    logging.basicConfig(level=level, format="%(message)s", handlers=handlers)
 
 
 def pairwise(iterable):
@@ -140,20 +135,24 @@ def pairwise(iterable):
 
 def timeit(*args_, **kwargs_):
     """Function wrapper that measures the time elapsed during its execution."""
+
     def inner_function(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             ts = time.time()
             result = func(*args, **kwargs)
-            msg = " "*21 + f"Elapsed time: {time.time() - ts:6f} seconds."
+            msg = " " * 21 + f"Elapsed time: {time.time() - ts:6f} seconds."
             try:
                 if args_[0] == "info":
                     logging.info(msg)
             except IndexError:
                 logging.debug(msg)
             return result
+
         return wrapper
+
     return inner_function
+
 
 def sample_sphere(n):
     """n even samples over a half sphere"""
