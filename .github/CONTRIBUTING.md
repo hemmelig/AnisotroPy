@@ -1,8 +1,8 @@
 # Contributing
 
-When contributing to this repository, please first discuss the change you wish to make with the owners via submitting an issue, sending an email, or any other method before making a change. 
+Contributions to AnisotroPy are welcomed. The first stop should be to reach out, either directly or—preferably—via the GitHub Issues panel, to discuss the proposed changes.
 
-Please note we have a code of conduct, please follow it in all your interactions with the project.
+Please review the Code of Conduct, set out at the end of this file, and endeavour to follow it when interacting with this project.
 
 ## Getting Started
 
@@ -12,12 +12,12 @@ Please note we have a code of conduct, please follow it in all your interactions
 
 ## Pull Request Process
 
-1. Fork the repo
-2. Make a new branch. For new features, your new branch should be from master. For bugfixes, your new branch should be from `maintenance_1.0.x`.
-1. Ensure all existing tests run with no (unexpected) errors to make merging as straightforward as possible.
-2. Any new features are accompanied by an appropriate test.
-3. Ensure any and all contributions are documented. We use the NumPy style guide documentation. For examples, the user is encouraged to look at the other functions/classes in AnisotroPy
-4. Pull Request merging is handled by the AnisotroPy project maintainers, whose responsibility it is to help you conform to the expected coding standards.
+1. Fork the repo;
+2. Make a new branch. For new features, your new branch should be from main;
+3. *Before making any changes*, ensure all existing tests run with no (unexpected) errors;
+4. Make your contribution. Note, all new features must be accompanied by an appropriate test;
+5. Ensure any and all contributions are documented. We use the NumPy style guide documentation. For examples, the user is encouraged to look at the other functions/classes in AnisotroPy;
+6. Create a Pull Request from your fork to the main repository. Pull Request merging is handled by the AnisotroPy project maintainers, whose responsibility it is to help you conform to the expected coding standards.
 
 ## Licensing contributions
 All submitted contributions, whether features, fixes, or data, must be compatible with the GPLv3 and will be GPLv3 licensed as soon as they are part of AnisotroPy. By submitting a pull request, you are acknowledging this and accepting the terms laid out in the LICENSE file.
@@ -79,7 +79,7 @@ further defined and clarified by project maintainers.
 ### Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported by contacting the project team at anisotropy.developers@gmail.com. All
+reported by contacting the project team at cbacon@ldeo.columbia.edu. All
 complaints will be reviewed and investigated and will result in a response that
 is deemed necessary and appropriate to the circumstances. The project team is
 obligated to maintain confidentiality with regard to the reporter of an incident.

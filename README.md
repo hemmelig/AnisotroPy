@@ -66,7 +66,7 @@ Contributions to AnisotroPy are welcomed. The first stop should be to reach out,
 
 Bug reports, suggestions for new features and enhancements, and even links to projects that have made use of AnisotroPy are most welcome.
 
-See our [contributions page](https://github.com/hemmelig/AnisotroPy/blob/master/.github/CONTRIBUTING.md) for more information.
+See our [contributions page](https://github.com/hemmelig/AnisotroPy/blob/main/.github/CONTRIBUTING.md) for more information.
 
 Contact
 -------
