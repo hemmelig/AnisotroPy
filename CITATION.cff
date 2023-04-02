@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Bacon
+    given-names: Conor Andrew
+    orcid: https://orcid.org/0000-0002-2558-8555
+  - family-names: Bloch
+    given-names: Wasja
+    orcid: https://orcid.org/0000-0002-0341-4925
+title: "AnisotroPy"
+version: 0.0.1
+doi: 10.5281/zenodo.5931586
+date-released: 2022-01-31
